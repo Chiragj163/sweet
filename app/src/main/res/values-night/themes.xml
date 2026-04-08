@@ -1,0 +1,12 @@
+<resources>
+    <style name="Theme.Sweet" parent="Theme.Material3.DayNight.NoActionBar">
+
+        <item name="colorPrimary">#6750A4</item>
+        <item name="colorSecondary">#625B71</item>
+        <item name="colorOnPrimary">@color/white</item>
+        <item name="colorOnSecondary">#3E2723</item>
+
+        <item name="android:statusBarColor">#121212</item>
+
+    </style>
+</resources>

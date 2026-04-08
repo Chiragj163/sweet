@@ -1,0 +1,13 @@
+<resources>
+    <string name="app_name">sweet</string>
+    <string name="items_list">List of items</string>
+    <string name="gst_hint">GST %</string>
+    <string name="discount_hint">Discount ₹</string>
+    <string name="add_to_bill">Add to Bill</string>
+    <string name="generate_pdf">Generate Bill PDF</string>
+    <string name="total_text">Total: ₹0</string>
+    <string name="final_text">Final: ₹0</string>
+    <string name="quantity_hint">Quantity</string>
+    <!-- TODO: Remove or change this placeholder text -->
+    <string name="hello_blank_fragment">Hello blank fragment</string>
+</resources>
