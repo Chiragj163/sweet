@@ -1,6 +1,7 @@
 package com.example.sweet;
 
 public class CartItem {
+
     String name;
     double qty;
     double price;
@@ -14,6 +15,9 @@ public class CartItem {
     public String getName() { return name; }
     public double getQty() { return qty; }
     public double getPrice() { return price; }
+    public void setQty(double qty) {
+        this.qty = qty;
+    }
 
     public double getTotal() {
         return qty * price;

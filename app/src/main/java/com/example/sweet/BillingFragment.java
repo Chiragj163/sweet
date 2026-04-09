@@ -46,7 +46,6 @@ public class BillingFragment extends Fragment {
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
-
         View view = inflater.inflate(R.layout.fragment_billing, container, false);
 
         initViews(view);
@@ -184,17 +183,28 @@ public class BillingFragment extends Fragment {
         Item item = itemList.get(spItems.getSelectedItemPosition());
         double qty = Double.parseDouble(qtyStr);
 
-        CartItem cartItem = new CartItem(item.getName(), qty, item.getPrice());
-        cartList.add(cartItem);
+        boolean found = false;
 
-        total += cartItem.getTotal();
+        for (int i = 0; i < cartList.size(); i++) {
+            CartItem c = cartList.get(i);
 
-        adapter.notifyItemInserted(cartList.size() - 1);
-        updateTotalUI();
+            if (c.getName().equals(item.getName())) {
+                c.setQty(c.getQty() + qty);
+                adapter.notifyItemChanged(i);
+                found = true;
+                break;
+            }
+        }
 
+        if (!found) {
+            CartItem cartItem = new CartItem(item.getName(), qty, item.getPrice());
+            cartList.add(cartItem);
+            adapter.notifyItemInserted(cartList.size() - 1);
+        }
+
+        updateTotalFromAdapter();
         etQty.setText("");
     }
-
     private void updateTotalUI() {
         tvTotal.setText(String.format("Total: ₹%.2f", total));
         calculateFinal();
@@ -282,10 +292,10 @@ public class BillingFragment extends Fragment {
         msg.append("Kolkata, India\n");
         msg.append("Date: ")
                 .append(new java.text.SimpleDateFormat("dd-MM-yyyy HH:mm").format(new Date()))
-                .append("\n---------------------------\n");
+                .append("\n----------------------------------\n");
 
         msg.append("*Item      Qty    Amt*\n");
-        msg.append("---------------------------\n");
+        msg.append("-----------------------------------------\n");
 
         for (CartItem item : cartList) {
             msg.append(String.format(
@@ -296,7 +306,7 @@ public class BillingFragment extends Fragment {
             ));
         }
 
-        msg.append("---------------------------\n");
+        msg.append("-----------------------------------------\n");
         msg.append("*Total: ₹").append(finalAmount).append("*\n");
         msg.append("\n🙏 Thank You!");
 

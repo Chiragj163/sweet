@@ -1,6 +1,9 @@
 package com.example.sweet;
 
+import android.graphics.Rect;
 import android.os.Bundle;
+import android.view.View;
+import android.view.WindowManager;
 import android.widget.TextView;
 import android.widget.Toast;
 import androidx.appcompat.app.AppCompatActivity;
@@ -105,7 +108,7 @@ public class MainActivity extends AppCompatActivity {
         setContentView(R.layout.activity_main);
 
         bottomNav = findViewById(R.id.bottomNav);
-
+        View rootView = findViewById(android.R.id.content);
         loadFragment(new DashboardFragment());
 
         bottomNav.setOnItemSelectedListener(item -> {
@@ -123,6 +126,24 @@ public class MainActivity extends AppCompatActivity {
 
             return false;
         });
+        rootView.getViewTreeObserver().addOnGlobalLayoutListener(() -> {
+            Rect r = new Rect();
+            rootView.getWindowVisibleDisplayFrame(r);
+            int screenHeight = rootView.getRootView().getHeight();
+
+            int keypadHeight = screenHeight - r.bottom;
+
+            if (keypadHeight > screenHeight * 0.15) {
+                // Keyboard is open
+                findViewById(R.id.bottomNav).setVisibility(View.GONE);
+            } else {
+                // Keyboard is closed
+                findViewById(R.id.bottomNav).setVisibility(View.VISIBLE);
+            }
+        });
+        getWindow().setSoftInputMode(
+                WindowManager.LayoutParams.SOFT_INPUT_ADJUST_RESIZE
+        );
     }
 
     private void loadFragment(Fragment fragment) {
