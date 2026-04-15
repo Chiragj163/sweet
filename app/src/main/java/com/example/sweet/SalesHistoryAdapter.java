@@ -1,40 +1,67 @@
 package com.example.sweet;
 
 import android.content.Context;
-import android.view.LayoutInflater;
-import android.view.View;
-import android.view.ViewGroup;
-import android.widget.ArrayAdapter;
+import android.view.*;
 import android.widget.TextView;
+
+import androidx.recyclerview.widget.RecyclerView;
 
 import java.util.List;
 
-public class SalesHistoryAdapter extends ArrayAdapter<Sale> {
+public class SalesHistoryAdapter extends RecyclerView.Adapter<SalesHistoryAdapter.ViewHolder> {
 
-    public SalesHistoryAdapter(Context context, List<Sale> data) {
-        super(context, 0, data);
+    public interface OnBillClick {
+        void onClick(Sale sale);
+    }
+
+    private Context context;
+    private List<Sale> list;
+    private OnBillClick listener;
+
+    public SalesHistoryAdapter(Context context, List<Sale> list, OnBillClick listener) {
+        this.context = context;
+        this.list = list;
+        this.listener = listener;
+    }
+
+    public void updateList(List<Sale> newList) {
+        this.list = newList;
+        notifyDataSetChanged();
     }
 
     @Override
-    public View getView(int position, View convertView, ViewGroup parent) {
+    public ViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
 
-        if (convertView == null) {
-            convertView = LayoutInflater.from(parent.getContext())
-                    .inflate(R.layout.row_history, parent, false);
+        View view = LayoutInflater.from(context)
+                .inflate(android.R.layout.simple_list_item_2, parent, false);
+
+        return new ViewHolder(view);
+    }
+
+    @Override
+    public void onBindViewHolder(ViewHolder holder, int position) {
+
+        Sale sale = list.get(position);
+
+        holder.title.setText("Bill #" + sale.getBillNo());
+        holder.sub.setText("₹" + sale.getAmount() + " • " + sale.getDate());
+
+        holder.itemView.setOnClickListener(v -> listener.onClick(sale));
+    }
+
+    @Override
+    public int getItemCount() {
+        return list.size();
+    }
+
+    static class ViewHolder extends RecyclerView.ViewHolder {
+
+        TextView title, sub;
+
+        public ViewHolder(View itemView) {
+            super(itemView);
+            title = itemView.findViewById(android.R.id.text1);
+            sub = itemView.findViewById(android.R.id.text2);
         }
-
-        TextView tvDate = convertView.findViewById(R.id.tvDate);
-        TextView tvTotal = convertView.findViewById(R.id.tvTotal);
-        TextView tvItems = convertView.findViewById(R.id.tvItems);
-
-        Sale sale = getItem(position); // ✅ FIX
-
-        if (sale != null) {
-            tvDate.setText(sale.getDate());
-            tvTotal.setText("₹" + sale.getAmount());
-            tvItems.setText(sale.getSummary());
-        }
-
-        return convertView;
     }
 }

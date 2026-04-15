@@ -10,6 +10,7 @@ import android.widget.TextView;
 import androidx.cardview.widget.CardView;
 import androidx.fragment.app.Fragment;
 
+import com.github.mikephil.charting.components.YAxis;
 import com.google.android.material.bottomnavigation.BottomNavigationView;
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
 
@@ -20,13 +21,17 @@ import com.github.mikephil.charting.data.BarDataSet;
 import com.github.mikephil.charting.data.BarEntry;
 import com.github.mikephil.charting.formatter.IndexAxisValueFormatter;
 
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Calendar;
+import java.util.Date;
 import java.util.List;
 
 public class DashboardFragment extends Fragment {
 
     DatabaseHelper db;
-
+    BarChart barChart;
+    TextView tvSales ,tvTotalBills ,tvAvgBill,tvTopItem;
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
@@ -35,26 +40,31 @@ public class DashboardFragment extends Fragment {
 
         db = new DatabaseHelper(requireContext());
 
-        TextView tvSales = view.findViewById(R.id.tvSales);
-        TextView tvTotalBills = view.findViewById(R.id.tvTotalBills);
-        TextView tvAvgBill = view.findViewById(R.id.tvAvgBill);
-        TextView tvTopItem = view.findViewById(R.id.tvTopItem);
-//        FloatingActionButton fabAdd = view.findViewById(R.id.fabAdd);
+        tvSales = view.findViewById(R.id.tvSales);
+        tvTotalBills = view.findViewById(R.id.tvTotalBills);
+        tvAvgBill = view.findViewById(R.id.tvAvgBill);
+        tvTopItem = view.findViewById(R.id.tvTopItem);
+        barChart = view.findViewById(R.id.barChart);
+
         BottomNavigationView nav = requireActivity().findViewById(R.id.bottomNav);
         if (nav.getSelectedItemId() != R.id.nav_home) {
             nav.setSelectedItemId(R.id.nav_home);
         }
-        animateValue(tvSales, db.getTodaySales());
-        tvTotalBills.setText("Bills: " + db.getTotalBills());
-        animateValue(tvAvgBill, db.getAverageBill());
-        tvTopItem.setText("Top: " + db.getTopItem());
+
 
 
         CardView cardCreateBill = view.findViewById(R.id.cardCreateBill);
         CardView cardItems = view.findViewById(R.id.cardItems);
 
-        cardItems.setOnClickListener(v ->
-                startActivity(new Intent(getContext(), ItemsActivity.class)));
+        cardItems.setOnClickListener(v -> {
+            v.animate().rotationYBy(360).setDuration(400)
+                    .withEndAction(() -> {
+                        startActivity(new Intent(getContext(), ItemsActivity.class));
+                    });
+        });
+
+
+               // startActivity(new Intent(getContext(), ItemsActivity.class)));
         cardCreateBill.setOnClickListener(v -> {
             v.animate().rotationYBy(360).setDuration(400)
                     .withEndAction(() -> {
@@ -65,29 +75,55 @@ public class DashboardFragment extends Fragment {
                                 .commit();
                     });
         });
-//        fabAdd.setOnClickListener(v -> {
-//            requireActivity().getSupportFragmentManager()
-//                    .beginTransaction()
-//                    .replace(R.id.frameContainer, new BillingFragment())
-//                    .commit();
-//        });
-        BarChart barChart = view.findViewById(R.id.barChart);
 
-        List<Float> salesData = db.getMonthlySales();
+
+        loadDashboard(view);
+
+        return view;
+    }
+    @Override
+    public void onResume() {
+        super.onResume();
+
+        View view = getView();
+        if (view != null) {
+            loadDashboard(view); // 🔥 refresh everything
+        }
+    }
+    private void loadDashboard(View view) {
+
+        animateValue(tvSales, db.getTodaySales());
+        tvTotalBills.setText("Bills: " + db.getTotalBills());
+        animateValue(tvAvgBill, db.getAverageBill());
+        tvTopItem.setText("Top: " + db.getTopItem());
+
+        loadChart();
+    }
+    private void loadChart(){
+
+        List<Float> salesData = db.getLast7DaysSales();
         List<BarEntry> entries = new ArrayList<>();
 
         for (int i = 0; i < salesData.size(); i++) {
-            if (salesData.get(i) > 0) {
-                entries.add(new BarEntry(i, salesData.get(i)));
-            }
+            entries.add(new BarEntry(i, salesData.get(i)));
         }
 
         BarDataSet dataSet = new BarDataSet(entries, "Monthly Sales");
 
         dataSet.setColor(getResources().getColor(R.color.purple_500));
-        dataSet.setValueTextColor(getResources().getColor(android.R.color.black));
+        dataSet.setValueTextColor(getResources().getColor(android.R.color.darker_gray));
         dataSet.setValueTextSize(12f);
-       // dataSet.setDrawValues(false);
+        dataSet.setDrawValues(true);
+
+        dataSet.setValueFormatter(new com.github.mikephil.charting.formatter.ValueFormatter() {
+            @Override
+            public String getBarLabel(BarEntry barEntry) {
+                if (barEntry.getY() == 0) {
+                    return "";
+                }
+                return String.valueOf((int) barEntry.getY());
+            }
+        });
 
         BarData barData = new BarData(dataSet);
         if (entries.isEmpty()) {
@@ -97,10 +133,14 @@ public class DashboardFragment extends Fragment {
             barChart.setData(barData);
         }
 
-// X-Axis labels
+
         List<String> days = new ArrayList<>();
-        for (int i = 1; i <= entries.size(); i++) {
-            days.add(String.valueOf(i));
+
+        Calendar cal = Calendar.getInstance();
+
+        for (int i = 6; i >= 0; i--) {
+            cal.setTime(new Date(System.currentTimeMillis() - i * 86400000L));
+            days.add(new SimpleDateFormat("EEE").format(cal.getTime()));
         }
 
         XAxis xAxis = barChart.getXAxis();
@@ -114,7 +154,11 @@ public class DashboardFragment extends Fragment {
         xAxis.setAvoidFirstLastClipping(true);
         xAxis.setTextColor(getResources().getColor(android.R.color.darker_gray));
 
-// Styling
+        // Y Axis styling
+        YAxis yAxis = barChart.getAxisLeft();
+        yAxis.setDrawGridLines(false);
+        yAxis.setTextColor(getResources().getColor(android.R.color.darker_gray));
+
         barChart.getAxisLeft().setDrawGridLines(false);
         barChart.getAxisRight().setEnabled(false);
         barChart.getLegend().setEnabled(false);
@@ -122,8 +166,8 @@ public class DashboardFragment extends Fragment {
 
         barChart.animateY(1000);
         barChart.invalidate();
-        return view;
     }
+
     private void animateValue(TextView tv, double value) {
         android.animation.ValueAnimator animator =
                 android.animation.ValueAnimator.ofFloat(0, (float) value);

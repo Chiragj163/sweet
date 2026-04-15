@@ -24,19 +24,9 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:orientation="vertical"
-                android:paddingHorizontal="24dp"
+                android:paddingHorizontal="10dp"
                 android:paddingTop="32dp"
                 android:paddingBottom="16dp">
-
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="Billing"
-                    android:textSize="12sp"
-                    android:textColor="?android:attr/textColorSecondary"
-                    android:textStyle="bold"
-                    android:textAllCaps="true"
-                    android:letterSpacing="0.1"/>
 
                 <TextView
                     android:layout_width="wrap_content"
@@ -78,6 +68,21 @@
                             android:inputType="phone"
                             android:maxLength="10"/>
                     </com.google.android.material.textfield.TextInputLayout>
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Filter by Category"
+                        android:textSize="12sp"
+                        android:textColor="?android:attr/textColorSecondary"
+                        android:layout_marginBottom="4dp"/>
+
+                    <Spinner
+                        android:id="@+id/spFilterCategory"
+                        android:layout_width="match_parent"
+                        android:layout_height="48dp"
+                        style="@style/Widget.AppCompat.Spinner.Underlined"
+                        android:layout_marginBottom="12dp"/>
+
 
                     <TextView
                         android:layout_width="wrap_content"
@@ -94,29 +99,38 @@
                         style="@style/Widget.AppCompat.Spinner.Underlined"
                         android:layout_marginBottom="16dp"/>
 
-                    <com.google.android.material.textfield.TextInputLayout
-                        style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
+                    <LinearLayout
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:hint="Quantity"
-                        app:startIconDrawable="@android:drawable/ic_input_add"
-                        android:layout_marginBottom="16dp">
+                        android:orientation="horizontal"
+                        android:baselineAligned="false">
 
-                        <com.google.android.material.textfield.TextInputEditText
-                            android:id="@+id/etQty"
-                            android:inputType="numberDecimal"
-                            android:layout_width="match_parent"
-                            android:layout_height="wrap_content"/>
-                    </com.google.android.material.textfield.TextInputLayout>
+                        <com.google.android.material.textfield.TextInputLayout
+                            style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
+                            android:layout_width="0dp"
+                            android:layout_weight="1"
+                            android:layout_height="wrap_content"
+                            android:hint="Qty"
+                            android:layout_marginEnd="12dp">
 
-                    <com.google.android.material.button.MaterialButton
-                        android:id="@+id/btnAddToBill"
-                        style="@style/Widget.MaterialComponents.Button.OutlinedButton"
-                        android:layout_width="match_parent"
-                        android:layout_height="52dp"
-                        app:icon="@android:drawable/ic_input_add"
-                        android:text="Add to Bill"
-                        app:cornerRadius="8dp"/>
+                            <com.google.android.material.textfield.TextInputEditText
+                                android:id="@+id/etQty"
+                                android:inputType="numberDecimal"
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content"/>
+                        </com.google.android.material.textfield.TextInputLayout>
+
+                        <com.google.android.material.button.MaterialButton
+                            android:id="@+id/btnAddToBill"
+                            style="@style/Widget.MaterialComponents.Button.OutlinedButton"
+                            android:layout_width="0dp"
+                            android:layout_weight="1.5"
+                            android:layout_height="60dp"
+                            android:text="Add to Cart"
+                            android:textColor="?attr/colorPrimary"
+                            app:strokeColor="?attr/colorPrimary"
+                            app:cornerRadius="12dp"/>
+                    </LinearLayout>
                 </LinearLayout>
             </com.google.android.material.card.MaterialCardView>
 
@@ -165,22 +179,6 @@
                         android:layout_height="wrap_content"
                         android:orientation="horizontal"
                         android:baselineAligned="false">
-
-                        <com.google.android.material.textfield.TextInputLayout
-                            style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
-                            android:layout_width="0dp"
-                            android:layout_weight="1"
-                            android:layout_height="wrap_content"
-                            android:hint="GST (%)"
-                            android:layout_marginEnd="8dp">
-
-                            <com.google.android.material.textfield.TextInputEditText
-                                android:id="@+id/etGST"
-                                android:inputType="numberDecimal"
-                                android:layout_width="match_parent"
-                                android:layout_height="wrap_content"/>
-                        </com.google.android.material.textfield.TextInputLayout>
-
                         <com.google.android.material.textfield.TextInputLayout
                             style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
                             android:layout_width="0dp"
@@ -212,29 +210,44 @@
                         android:textSize="22sp"
                         android:textStyle="bold"
                         android:textColor="?android:attr/textColorPrimary"/>
-                    <com.google.android.material.button.MaterialButton
-                        android:id="@+id/btnGeneratePDF"
-                        android:layout_width="match_parent"
-                        android:layout_height="60dp"
-                        android:text="Generate Bill"
-                        android:textSize="16sp"
-                        android:textStyle="bold"
-                        app:cornerRadius="16dp"/>
 
-                    <com.google.android.material.button.MaterialButton
-                        android:id="@+id/btnConnectPrinter"
-                        style="@style/Widget.MaterialComponents.Button.TextButton"
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:icon="@drawable/ic_bluetooth"
-                        android:text="Check Printer Connection"
-                        android:layout_marginTop="8dp"
-                        app:icon="@android:drawable/stat_sys_data_bluetooth" />
 
                 </LinearLayout>
             </com.google.android.material.card.MaterialCardView>
 
         </LinearLayout>
     </ScrollView>
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:paddingHorizontal="24dp"
+        android:paddingTop="16dp"
+        android:paddingBottom="24dp"
+        android:background="?attr/colorSurface"
+        android:elevation="16dp">
+
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/btnGeneratePDF"
+            android:layout_width="match_parent"
+            android:layout_height="60dp"
+            android:text="Generate Bill &amp; Print"
+            android:textSize="16sp"
+            android:textStyle="bold"
+            app:cornerRadius="12dp"/>
+
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/btnConnectPrinter"
+            style="@style/Widget.MaterialComponents.Button.TextButton"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Printer Settings"
+            android:layout_marginTop="4dp"
+            android:textColor="?android:attr/textColorSecondary"
+            app:iconTint="?android:attr/textColorSecondary"
+            app:icon="@android:drawable/stat_sys_data_bluetooth" />
+
+    </LinearLayout>
+
 
 </LinearLayout>

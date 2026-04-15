@@ -1,85 +1,44 @@
 package com.example.sweet;
 
 import android.os.Bundle;
+import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
-import androidx.activity.EdgeToEdge;
-import androidx.appcompat.app.AppCompatActivity;
-import androidx.core.graphics.Insets;
-import androidx.core.view.ViewCompat;
-import androidx.core.view.WindowInsetsCompat;
 import androidx.fragment.app.Fragment;
-
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 
-import android.widget.ListView;
-import android.widget.ArrayAdapter;
+import com.google.android.material.card.MaterialCardView;
 
-import com.google.android.material.tabs.TabLayout;
-
-import java.util.List;
-import java.util.ArrayList;
 public class ReportFragment extends Fragment {
 
-    ListView listReport;
-    DatabaseHelper db;
-    ArrayAdapter<String> adapter;
-    List<String> reportList = new ArrayList<>();
+    MaterialCardView cardSalesByItem;
+    MaterialCardView cardHistory;
 
     @Nullable
-
-    TabLayout tabLayout;
-
     @Override
-    public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
-
+    public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
         View view = inflater.inflate(R.layout.fragment_report, container, false);
 
-        tabLayout = view.findViewById(R.id.tabLayout);
+        cardSalesByItem = view.findViewById(R.id.cardSalesByItem);
+        cardHistory = view.findViewById(R.id.cardHistory);
 
-        tabLayout.addTab(tabLayout.newTab().setText("Sales by Item"));
-        tabLayout.addTab(tabLayout.newTab().setText("History"));
+        // Click Listeners for the Menu Cards
+        cardSalesByItem.setOnClickListener(v -> navigateTo(new SalesByItemFragment()));
 
-        loadFragment(new SalesByItemFragment());
-
-        tabLayout.addOnTabSelectedListener(new TabLayout.OnTabSelectedListener() {
-            @Override
-            public void onTabSelected(TabLayout.Tab tab) {
-                if (tab.getPosition() == 0) {
-                    loadFragment(new SalesByItemFragment());
-                } else {
-                    loadFragment(new SalesHistoryFragment());
-                }
-            }
-
-            @Override public void onTabUnselected(TabLayout.Tab tab) {}
-            @Override public void onTabReselected(TabLayout.Tab tab) {}
-        });
+        cardHistory.setOnClickListener(v -> navigateTo(new SalesHistoryFragment()));
 
         return view;
     }
 
-    private void loadFragment(Fragment fragment) {
-        getChildFragmentManager()
+    // Handles the actual screen transition
+    private void navigateTo(Fragment fragment) {
+        requireActivity().getSupportFragmentManager()
                 .beginTransaction()
-                .replace(R.id.reportContainer, fragment)
+                // Assuming R.id.frameContainer is your main activity's fragment container
+                // based on your previous SalesHistoryFragment code!
+                .replace(R.id.frameContainer, fragment)
+                .addToBackStack(null) // Allows the user to hit "Back" to return to the menu
                 .commit();
     }
-
-    private void loadReports() {
-
-        reportList.clear();
-
-        List<Sale> sales = db.getAllSales();
-
-        for (Sale s : sales) {
-            String item =
-                    "₹" + s.getAmount() +
-                            "\n" + s.getSummary() +
-                            "\nDate: " + s.getDate();
-            reportList.add(item);
-        }
-    }
-
 }

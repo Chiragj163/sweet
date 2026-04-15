@@ -4,10 +4,14 @@
     <item
         android:id="@+id/nav_home"
         android:title="Home"
-        android:icon="@drawable/ic_home"/> <item
-    android:id="@+id/nav_bill"
-    android:title="Billing"
-    android:icon="@drawable/ic_receipt"/> <item
+        android:icon="@drawable/ic_home"/>
+    <item
+        android:id="@+id/nav_menu"
+        android:title="Menu"
+        android:icon="@drawable/ic_menu"/>
+
+    <item
     android:id="@+id/nav_report"
     android:title="Reports"
-    android:icon="@drawable/ic_analytics"/> </menu>
+    android:icon="@drawable/ic_analytics"/>
+</menu>

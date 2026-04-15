@@ -1,14 +1,15 @@
 package com.example.sweet;
 
 import android.content.Context;
-import android.view.LayoutInflater;
-import android.view.View;
-import android.view.ViewGroup;
+import android.view.*;
 import android.widget.ArrayAdapter;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 
+import java.text.SimpleDateFormat;
+import java.util.Date;
 import java.util.List;
+import java.util.Locale;
 
 public class SalesHistoryGroupedAdapter extends ArrayAdapter<Sale> {
 
@@ -16,36 +17,76 @@ public class SalesHistoryGroupedAdapter extends ArrayAdapter<Sale> {
         super(context, 0, list);
     }
 
+    static class ViewHolder {
+        TextView tvDate, tvTotal, tvBillNo;
+        LinearLayout container;
+    }
+
     @Override
     public View getView(int position, View convertView, ViewGroup parent) {
+
+        ViewHolder holder;
 
         if (convertView == null) {
             convertView = LayoutInflater.from(parent.getContext())
                     .inflate(R.layout.row_history_group, parent, false);
+
+            holder = new ViewHolder();
+            holder.tvDate = convertView.findViewById(R.id.tvDate);
+            holder.tvTotal = convertView.findViewById(R.id.tvTotal);
+            holder.container = convertView.findViewById(R.id.itemsContainer);
+            holder.tvBillNo = convertView.findViewById(R.id.tvBillNo);
+
+            convertView.setTag(holder);
+        } else {
+            holder = (ViewHolder) convertView.getTag();
         }
 
         Sale sale = getItem(position);
 
-        TextView tvDate = convertView.findViewById(R.id.tvDate);
-        TextView tvTotal = convertView.findViewById(R.id.tvTotal);
-        LinearLayout container = convertView.findViewById(R.id.itemsContainer);
+        if (sale != null) {
 
-        tvDate.setText("Date: " + sale.getDate());
-        tvTotal.setText("TOTAL: ₹" + sale.getAmount());
+            try {
+                SimpleDateFormat input = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.getDefault());
+                SimpleDateFormat output = new SimpleDateFormat("dd MMM yyyy, hh:mm a", Locale.getDefault());
 
-        container.removeAllViews(); // 🔥 important
+                Date d = input.parse(sale.getDate());
 
-        // 🔥 Add each item row dynamically
-        for (SaleItemRow item : sale.items) {
+                // ✅ FIXED BILL ID
+                String billId = new SimpleDateFormat("ddMMyy", Locale.getDefault())
+                        .format(d) + "-" + String.format("%03d", sale.getBillNo());
 
-            View row = LayoutInflater.from(parent.getContext())
-                    .inflate(R.layout.row_sales_item, container, false);
+                holder.tvBillNo.setText("🧾 " + billId);
+                holder.tvDate.setText(output.format(d));
 
-            ((TextView) row.findViewById(R.id.tvItem)).setText(item.name);
-            ((TextView) row.findViewById(R.id.tvQty)).setText(String.valueOf(item.qty));
-            ((TextView) row.findViewById(R.id.tvAmount)).setText("₹" + item.total);
+            } catch (Exception e) {
+                holder.tvDate.setText(sale.getDate());
+            }
 
-            container.addView(row);
+            holder.tvTotal.setText("₹" + String.format(Locale.getDefault(), "%.2f", sale.getAmount()));
+
+            holder.container.removeAllViews();
+
+            for (SaleItemRow item : sale.items) {
+
+                View row = LayoutInflater.from(parent.getContext())
+                        .inflate(R.layout.row_sales_item, holder.container, false);
+
+                TextView tvItem = row.findViewById(R.id.tvItem);
+                TextView tvQty = row.findViewById(R.id.tvQty);
+                TextView tvAmount = row.findViewById(R.id.tvAmount);
+                TextView tvGst = row.findViewById(R.id.tvGst);
+
+                tvItem.setText(item.name);
+                tvQty.setText(String.format(Locale.getDefault(), "%.0f", item.qty));
+                tvAmount.setText("₹" + String.format(Locale.getDefault(), "%.2f", item.total));
+
+                if (tvGst != null) {
+                    tvGst.setText(item.gstRate + "%");
+                }
+
+                holder.container.addView(row);
+            }
         }
 
         return convertView;
