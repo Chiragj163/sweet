@@ -63,7 +63,7 @@ public class ItemsActivity extends AppCompatActivity {
         );
         spUnit.setAdapter(spinnerAdapter);
 
-        String[] categories = {"Mithai", "Snacks", "Soft Drink", "Ice Cream"};
+        String[] categories = {"Sweet", "Snacks", "Soft Drink", "Ice Cream"};
 
         ArrayAdapter<String> catAdapter = new ArrayAdapter<>(
                 this,
@@ -72,7 +72,7 @@ public class ItemsActivity extends AppCompatActivity {
         );
 
         spCategory.setAdapter(catAdapter);
-        String[] filterCategories = {"All", "Mithai", "Snacks", "Soft Drink", "Ice Cream"};
+        String[] filterCategories = {"All", "Sweet", "Snacks", "Soft Drink", "Ice Cream"};
 
         ArrayAdapter<String> filterAdapter = new ArrayAdapter<>(
                 this,

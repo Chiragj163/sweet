@@ -45,7 +45,7 @@ public class CategoryAdapter extends RecyclerView.Adapter<CategoryAdapter.ViewHo
             case "All":
                 holder.imgCategory.setImageResource(R.drawable.all);
                 break;
-            case "Mithai":
+            case "Sweet":
                 holder.imgCategory.setImageResource(R.drawable.mithai);
                 break;
             case "Snacks":

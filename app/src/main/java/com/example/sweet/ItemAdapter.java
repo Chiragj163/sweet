@@ -110,7 +110,7 @@ public class ItemAdapter extends RecyclerView.Adapter<ItemAdapter.ViewHolder> {
             }
 
             // Categories
-            String[] categories = {"Mithai", "Snacks", "Soft Drink", "Ice Cream"};
+            String[] categories = {"Sweet", "Snacks", "Soft Drink", "Ice Cream"};
             ArrayAdapter<String> catAdapter = new ArrayAdapter<>(
                     context,
                     android.R.layout.simple_spinner_dropdown_item,

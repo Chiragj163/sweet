@@ -27,7 +27,7 @@ public class MenuFragment extends Fragment {
     DatabaseHelper db;
 
     List<String> categories = Arrays.asList(
-            "All" ,"Mithai", "Snacks", "Soft Drink", "Ice Cream"
+            "All" ,"Sweet", "Snacks", "Soft Drink", "Ice Cream"
     );
 
     List<Item> fullList = new ArrayList<>();   // 🔥 original data

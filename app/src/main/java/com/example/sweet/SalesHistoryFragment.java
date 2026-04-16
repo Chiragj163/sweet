@@ -12,6 +12,7 @@ import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ListView;
+import android.widget.PopupMenu;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -99,30 +100,131 @@ public class SalesHistoryFragment extends Fragment {
         // ================= DATE FILTER =================
         btnFilterDate.setOnClickListener(v -> {
 
-            Calendar cal = Calendar.getInstance();
+            PopupMenu popup = new PopupMenu(getContext(), btnFilterDate);
 
-            DatePickerDialog dialog = new DatePickerDialog(getContext(),
-                    (view1, year, month, day) -> {
+            popup.getMenu().add("Today");
+            popup.getMenu().add("This Week");
+            popup.getMenu().add("This Month");
+            popup.getMenu().add("6 Months");
+            popup.getMenu().add("This Year");
+            popup.getMenu().add("Custom");
 
-                        String date = String.format(Locale.getDefault(),
-                                "%04d-%02d-%02d", year, month + 1, day);
+            popup.setOnMenuItemClickListener(item -> {
 
-                        List<Sale> filtered = db.getSalesByDate(date);
+                String selected = item.getTitle().toString();
 
-                        sales.clear();
-                        sales.addAll(filtered);
-                        adapter.notifyDataSetChanged();
+                switch (selected) {
 
-                    },
-                    cal.get(Calendar.YEAR),
-                    cal.get(Calendar.MONTH),
-                    cal.get(Calendar.DAY_OF_MONTH)
-            );
+                    case "Today":
+                        filterDays(0);
+                        break;
 
-            dialog.show();
+                    case "This Week":
+                        filterDays(7);
+                        break;
+
+                    case "This Month":
+                        filterDays(30);
+                        break;
+
+                    case "6 Months":
+                        filterDays(180);
+                        break;
+
+                    case "This Year":
+                        filterDays(365);
+                        break;
+
+                    case "Custom":
+                        openDatePickerRange();
+                        break;
+                }
+
+                return true;
+            });
+
+            popup.show();
         });
 
         return view;
+    }
+    private void filterDays(int days) {
+
+        Calendar cal = Calendar.getInstance();
+
+        String endDate = new java.text.SimpleDateFormat("yyyy-MM-dd", Locale.getDefault())
+                .format(cal.getTime());
+
+        if (days == 0) {
+            // Today only
+            List<Sale> filtered = db.getSalesByDate(endDate);
+
+            sales.clear();
+            sales.addAll(filtered);
+            adapter.notifyDataSetChanged();
+            return;
+        }
+
+        cal.add(Calendar.DAY_OF_YEAR, -days);
+
+        String startDate = new java.text.SimpleDateFormat("yyyy-MM-dd", Locale.getDefault())
+                .format(cal.getTime());
+
+        List<Sale> filtered = db.getSalesBetweenDates(startDate, endDate);
+
+        sales.clear();
+        sales.addAll(filtered);
+        adapter.notifyDataSetChanged();
+    }
+    private String startDate = "";
+
+    private void openDatePickerRange() {
+
+        Calendar cal = Calendar.getInstance();
+
+        DatePickerDialog startPicker = new DatePickerDialog(getContext(),
+                (view, year, month, day) -> {
+
+                    startDate = String.format(Locale.getDefault(),
+                            "%04d-%02d-%02d", year, month + 1, day);
+
+                    // Now pick end date
+                    openEndDatePicker();
+
+                },
+                cal.get(Calendar.YEAR),
+                cal.get(Calendar.MONTH),
+                cal.get(Calendar.DAY_OF_MONTH)
+        );
+
+        startPicker.setTitle("Select Start Date");
+        startPicker.show();
+    }
+
+    private void openEndDatePicker() {
+
+        Calendar cal = Calendar.getInstance();
+
+        DatePickerDialog endPicker = new DatePickerDialog(getContext(),
+                (view, year, month, day) -> {
+
+                    String endDate = String.format(Locale.getDefault(),
+                            "%04d-%02d-%02d", year, month + 1, day);
+
+                    List<Sale> filtered = db.getSalesBetweenDates(startDate, endDate);
+
+                    sales.clear();
+                    sales.addAll(filtered);
+                    adapter.notifyDataSetChanged();
+
+                },
+                cal.get(Calendar.YEAR),
+                cal.get(Calendar.MONTH),
+                cal.get(Calendar.DAY_OF_MONTH)
+        );
+
+        endPicker.setTitle("Select End Date");
+        endPicker.show();
     }
 
     // ================= OPEN BILL =================

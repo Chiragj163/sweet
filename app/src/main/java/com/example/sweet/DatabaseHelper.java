@@ -1,5 +1,6 @@
 package com.example.sweet;
 
+import android.content.ContentValues;
 import android.content.Context;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteOpenHelper;
@@ -12,10 +13,12 @@ import java.util.Date;
 import java.util.Locale;
 
 import com.example.sweet.Sale;
+import com.github.mikephil.charting.data.PieEntry;
+
 public class DatabaseHelper extends SQLiteOpenHelper {
 
     private static final String DB_NAME = "SweetShopDB";
-    private static final int DB_VERSION = 5;
+    private static final int DB_VERSION = 6;
 
     public static final String TABLE_ITEMS = "items";
 
@@ -142,11 +145,12 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         );
 
         double total = 0;
-
-        if (cursor != null && cursor.moveToFirst()) {
-            if (!cursor.isNull(0)) {
+        try {
+            if (cursor.moveToFirst() && !cursor.isNull(0)) {
                 total = cursor.getDouble(0);
             }
+        } finally {
+            cursor.close();
         }
 
         cursor.close();
@@ -212,31 +216,35 @@ public class DatabaseHelper extends SQLiteOpenHelper {
     }
     public int getTotalBills() {
         SQLiteDatabase db = this.getReadableDatabase();
-
         Cursor cursor = db.rawQuery("SELECT COUNT(*) FROM sales", null);
 
+        int count = 0;
         if (cursor.moveToFirst()) {
-            return cursor.getInt(0);
+            count = cursor.getInt(0);
         }
 
-        return 0;
+        cursor.close();
+        return count;
     }
     public double getAverageBill() {
         SQLiteDatabase db = this.getReadableDatabase();
-
         Cursor cursor = db.rawQuery("SELECT AVG(total) FROM sales", null);
 
+        double avg = 0;
+
         if (cursor.moveToFirst() && !cursor.isNull(0)) {
-            return cursor.getDouble(0);
+            avg = cursor.getDouble(0);
         }
 
-        return 0;
+        cursor.close();
+        return avg;
     }
     public long saveSale(double subtotal, double gst, double discount, double total, List<CartItem> cartList) {
 
         SQLiteDatabase db = this.getWritableDatabase();
 
-        String date = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(new Date());
+        String date = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss", java.util.Locale.US)
+                .format(new Date());
         int billNo = getTodayBillCount() + 1;
 
         android.content.ContentValues values = new android.content.ContentValues();
@@ -247,20 +255,25 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         values.put("discount", discount);
         values.put("total", total);
 
-        long saleId = db.insert("sales", null, values);
+        db.beginTransaction();
+        try {
+            long saleId = db.insert("sales", null, values);
 
-        // 🔥 Insert each item
-        for (CartItem item : cartList) {
+            for (CartItem item : cartList) {
+                ContentValues itemValues = new ContentValues();
+                itemValues.put("sale_id", saleId);
+                itemValues.put("name", item.getName());
+                itemValues.put("qty", item.getQty());
+                itemValues.put("price", item.getPrice());
+                itemValues.put("total", item.getTotal());
+                itemValues.put("gst_rate", item.getGstRate());
 
-            android.content.ContentValues itemValues = new android.content.ContentValues();
-            itemValues.put("sale_id", saleId);
-            itemValues.put("name", item.getName());
-            itemValues.put("qty", item.getQty());
-            itemValues.put("price", item.getPrice());
-            itemValues.put("total", item.getTotal());
-            itemValues.put("gst_rate", item.getGstRate());
+                db.insert("sale_items", null, itemValues);
+            }
 
-            db.insert("sale_items", null, itemValues);
+            db.setTransactionSuccessful();
+        } finally {
+            db.endTransaction();
         }
         return billNo;
     }
@@ -404,13 +417,11 @@ public class DatabaseHelper extends SQLiteOpenHelper {
             );
         }
 
-        if (cursor != null && cursor.moveToFirst()) {
+        if (cursor.moveToFirst()) {
 
             do {
-
                 String image = "";
 
-                // ✅ SAFE COLUMN CHECK
                 int imageIndex = cursor.getColumnIndex("image");
 
                 if (imageIndex != -1 && !cursor.isNull(imageIndex)) {
@@ -545,5 +556,282 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         cursor.close();
         return list;
     }
+    public List<SaleItemRow> getSaleItemsBySaleId(int saleId) {
 
+        List<SaleItemRow> list = new ArrayList<>();
+        SQLiteDatabase db = this.getReadableDatabase();
+
+        Cursor c = db.rawQuery(
+                "SELECT name, qty, price, total, gst_rate FROM sale_items WHERE sale_id = ?",
+                new String[]{String.valueOf(saleId)}
+        );
+
+        while (c.moveToNext()) {
+            list.add(new SaleItemRow(
+                    "", // date if needed
+                    c.getString(0),
+                    c.getDouble(1),
+                    c.getDouble(2),
+                    c.getDouble(3),
+                    c.getDouble(4)
+            ));
+        }
+
+        c.close();
+        return list;
+    }
+    public List<Sale> getSalesBetweenDates(String start, String end) {
+
+        List<Sale> list = new ArrayList<>();
+
+        SQLiteDatabase db = this.getReadableDatabase();
+
+        Cursor c = db.rawQuery(
+                "SELECT * FROM sales WHERE date(date) BETWEEN date(?) AND date(?) ORDER BY date DESC",
+                new String[]{start, end}
+        );
+
+        while (c.moveToNext()) {
+            int saleId = c.getInt(c.getColumnIndexOrThrow("id"));
+
+            Sale sale = new Sale();
+
+            sale.setBillNo(c.getInt(c.getColumnIndexOrThrow("bill_no")));
+            sale.setDate(c.getString(c.getColumnIndexOrThrow("date")));
+            sale.setAmount(c.getDouble(c.getColumnIndexOrThrow("total")));
+
+            sale.items = getSaleItemsBySaleId(saleId);
+
+            list.add(sale);
+        }
+
+        c.close();
+        return list;
+    }
+    public List<PieEntry> getItemWiseSales(String start, String end) {
+        List<PieEntry> list = new ArrayList<>();
+        SQLiteDatabase db = this.getReadableDatabase();
+
+        Cursor c = db.rawQuery(
+                "SELECT si.name, SUM(si.total) FROM sale_items si " +
+                        "JOIN sales s ON si.sale_id = s.id " +
+                        "WHERE date(s.date) BETWEEN date(?) AND date(?) " +
+                        "GROUP BY si.name",
+                new String[]{start, end}
+        );
+
+        while (c.moveToNext()) {
+            list.add(new PieEntry((float) c.getDouble(1), c.getString(0)));
+        }
+        c.close();
+        return list;
+    }
+    public List<PieEntry> getCategoryWiseSales(String start, String end) {
+
+        List<PieEntry> list = new ArrayList<>();
+        SQLiteDatabase db = this.getReadableDatabase();
+
+        Cursor c = db.rawQuery(
+                "SELECT i.category, SUM(si.total) FROM sale_items si " +
+                        "JOIN items i ON si.name = i.name " +
+                        "JOIN sales s ON si.sale_id = s.id " +
+                        "WHERE date(s.date) BETWEEN date(?) AND date(?) " +
+                        "GROUP BY i.category",
+                new String[]{start, end}
+        );
+
+        while (c.moveToNext()) {
+            list.add(new PieEntry(
+                    (float) c.getDouble(1),
+                    c.getString(0)
+            ));
+        }
+
+        c.close();
+        return list;
+    }
+    public List<PieEntry> getItemWiseSalesFiltered(String start, String end, String category) {
+
+        List<PieEntry> list = new ArrayList<>();
+        SQLiteDatabase db = this.getReadableDatabase();
+
+        String query;
+
+        if (category.equals("All")) {
+            query = "SELECT si.name, SUM(si.total) FROM sale_items si " +
+                    "JOIN sales s ON si.sale_id = s.id " +
+                    "WHERE date(s.date) BETWEEN date(?) AND date(?) " +
+                    "GROUP BY si.name";
+        } else {
+            query = "SELECT si.name, SUM(si.total) FROM sale_items si " +
+                    "JOIN items i ON si.name = i.name " +
+                    "JOIN sales s ON si.sale_id = s.id " +
+                    "WHERE i.category=? AND date(s.date) BETWEEN date(?) AND date(?) " +
+                    "GROUP BY si.name";
+        }
+
+        Cursor c = category.equals("All")
+                ? db.rawQuery(query, new String[]{start, end})
+                : db.rawQuery(query, new String[]{category, start, end});
+
+        while (c.moveToNext()) {
+            list.add(new PieEntry(
+                    (float) c.getDouble(1),
+                    c.getString(0)
+            ));
+        }
+
+        c.close();
+        return list;
+    }
+    public double getMonthSales() {
+        SQLiteDatabase db = this.getReadableDatabase();
+
+        String month = new SimpleDateFormat("yyyy-MM", Locale.getDefault())
+                .format(new Date());
+
+        Cursor c = db.rawQuery(
+                "SELECT SUM(total) FROM sales WHERE date LIKE ?",
+                new String[]{month + "%"}
+        );
+
+        double total = 0;
+        if (c.moveToFirst() && !c.isNull(0)) total = c.getDouble(0);
+        c.close();
+        return total;
+    }
+    public double getYearSales() {
+        SQLiteDatabase db = this.getReadableDatabase();
+
+        String year = new SimpleDateFormat("yyyy", Locale.getDefault())
+                .format(new Date());
+
+        Cursor c = db.rawQuery(
+                "SELECT SUM(total) FROM sales WHERE date LIKE ?",
+                new String[]{year + "%"}
+        );
+
+        double total = 0;
+        if (c.moveToFirst() && !c.isNull(0)) total = c.getDouble(0);
+        c.close();
+        return total;
+    }
+    public double getSalesBetweenDatesTotal(String start, String end) {
+
+        SQLiteDatabase db = this.getReadableDatabase();
+
+        Cursor c = db.rawQuery(
+                "SELECT SUM(total) FROM sales WHERE date(date) BETWEEN date(?) AND date(?)",
+                new String[]{start, end}
+        );
+
+        double total = 0;
+
+        if (c.moveToFirst() && !c.isNull(0)) {
+            total = c.getDouble(0);
+        }
+
+        c.close();
+        return total;
+    }
+    public List<String> getSalesByItemBetweenDates(String start, String end) {
+
+        List<String> result = new ArrayList<>();
+        SQLiteDatabase db = this.getReadableDatabase();
+
+        Cursor cursor = db.rawQuery(
+                "SELECT si.name, SUM(si.qty), SUM(si.total) " +
+                        "FROM sale_items si " +
+                        "JOIN sales s ON si.sale_id = s.id " +
+                        "WHERE date(s.date) BETWEEN date(?) AND date(?) " +
+                        "GROUP BY si.name",
+                new String[]{start, end}
+        );
+
+        while (cursor.moveToNext()) {
+
+            String name = cursor.getString(0);
+            double qty = cursor.getDouble(1);
+            double revenue = cursor.getDouble(2);
+
+            result.add(
+                    name +
+                            "\nQty Sold: " + qty +
+                            "\nRevenue: ₹" + revenue
+            );
+        }
+
+        cursor.close();
+        return result;
+    }
+    public List<String> getSalesByItemFiltered(String start, String end, String category) {
+
+        List<String> list = new ArrayList<>();
+        SQLiteDatabase db = this.getReadableDatabase();
+
+        String query =
+                "SELECT si.name, SUM(si.qty), SUM(si.total) " +
+                        "FROM sale_items si " +
+                        "JOIN sales s ON si.sale_id = s.id " +
+                        "JOIN items i ON si.name = i.name " +
+                        "WHERE date(s.date) BETWEEN date(?) AND date(?) ";
+
+        if (!category.equals("All")) {
+            query += "AND i.category = ? ";
+        }
+
+        query += "GROUP BY si.name";
+
+        Cursor c;
+
+        if (category.equals("All")) {
+            c = db.rawQuery(query, new String[]{start, end});
+        } else {
+            c = db.rawQuery(query, new String[]{start, end, category});
+        }
+
+        while (c.moveToNext()) {
+
+            list.add(
+                    c.getString(0) +
+                            "\nQty Sold: " + c.getDouble(1) +
+                            "\nRevenue: ₹" + c.getDouble(2)
+            );
+        }
+
+        c.close();
+        return list;
+    }
+    public double getSalesByItemTotal(String start, String end, String category) {
+
+        SQLiteDatabase db = this.getReadableDatabase();
+
+        String query =
+                "SELECT SUM(si.total) " +
+                        "FROM sale_items si " +
+                        "JOIN sales s ON si.sale_id = s.id " +
+                        "JOIN items i ON si.name = i.name " +
+                        "WHERE date(s.date) BETWEEN date(?) AND date(?) ";
+
+        if (!category.equals("All")) {
+            query += "AND i.category = ?";
+        }
+
+        Cursor c;
+
+        if (category.equals("All")) {
+            c = db.rawQuery(query, new String[]{start, end});
+        } else {
+            c = db.rawQuery(query, new String[]{start, end, category});
+        }
+
+        double total = 0;
+
+        if (c.moveToFirst() && !c.isNull(0)) {
+            total = c.getDouble(0);
+        }
+
+        c.close();
+        return total;
+    }
 }

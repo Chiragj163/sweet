@@ -46,12 +46,16 @@ public class SalesHistoryAdapter extends RecyclerView.Adapter<SalesHistoryAdapte
         holder.title.setText("Bill #" + sale.getBillNo());
         holder.sub.setText("₹" + sale.getAmount() + " • " + sale.getDate());
 
-        holder.itemView.setOnClickListener(v -> listener.onClick(sale));
+        holder.itemView.setOnClickListener(v -> {
+            if (listener != null) {
+                listener.onClick(sale);
+            }
+        });
     }
 
     @Override
     public int getItemCount() {
-        return list.size();
+        return list != null ? list.size() : 0;
     }
 
     static class ViewHolder extends RecyclerView.ViewHolder {

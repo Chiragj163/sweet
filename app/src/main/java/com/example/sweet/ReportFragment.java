@@ -13,7 +13,7 @@ import com.google.android.material.card.MaterialCardView;
 public class ReportFragment extends Fragment {
 
     MaterialCardView cardSalesByItem;
-    MaterialCardView cardHistory;
+    MaterialCardView cardHistory ,cardAnalytics;
 
     @Nullable
     @Override
@@ -22,12 +22,13 @@ public class ReportFragment extends Fragment {
 
         cardSalesByItem = view.findViewById(R.id.cardSalesByItem);
         cardHistory = view.findViewById(R.id.cardHistory);
+        cardAnalytics= view.findViewById(R.id.cardAnalytics);
 
         // Click Listeners for the Menu Cards
         cardSalesByItem.setOnClickListener(v -> navigateTo(new SalesByItemFragment()));
 
         cardHistory.setOnClickListener(v -> navigateTo(new SalesHistoryFragment()));
-
+        cardAnalytics.setOnClickListener(v -> navigateTo(new AnalyticsFragment()));
         return view;
     }
 

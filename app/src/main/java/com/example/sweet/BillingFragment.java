@@ -142,7 +142,7 @@ public class BillingFragment extends Fragment {
                 e.printStackTrace();
             }
         }
-        String[] categories = {"All", "Mithai", "Snacks", "Soft Drink", "Ice Cream"};
+        String[] categories = {"All", "Sweet", "Snacks", "Soft Drink", "Ice Cream"};
 
         spFilterCategory.setAdapter(new ArrayAdapter<>(
                 getContext(),
