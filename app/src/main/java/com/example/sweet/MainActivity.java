@@ -4,28 +4,15 @@ import android.graphics.Rect;
 import android.os.Bundle;
 import android.view.View;
 import android.view.WindowManager;
-import android.widget.TextView;
-import android.widget.Toast;
-
 import androidx.appcompat.app.AppCompatActivity;
-import androidx.cardview.widget.CardView;
-
-import android.content.Intent;
-
 import androidx.fragment.app.Fragment;
-
+import android.os.VibrationEffect;
+import android.os.Vibrator;
+import android.os.Build;
+import android.content.Context;
 import com.google.android.material.bottomnavigation.BottomNavigationView;
-import com.google.android.material.floatingactionbutton.FloatingActionButton;
-import com.github.mikephil.charting.charts.BarChart;
 import com.github.mikephil.charting.data.*;
 import com.github.mikephil.charting.components.*;
-
-import java.util.List;
-import java.util.ArrayList;
-import java.util.Arrays;
-
-import com.github.mikephil.charting.formatter.IndexAxisValueFormatter;
-
 public class MainActivity extends AppCompatActivity {
 
     BottomNavigationView bottomNav;
@@ -97,6 +84,35 @@ public class MainActivity extends AppCompatActivity {
                 }
             }
         });
+        Vibrator vibrator = (Vibrator) getSystemService(Context.VIBRATOR_SERVICE);
+
+        bottomNav.setOnItemSelectedListener(item -> {
+
+            if (vibrator != null && vibrator.hasVibrator()) {
+
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                    // ✅ API 26+
+                    vibrator.vibrate(
+                            VibrationEffect.createOneShot(50, VibrationEffect.DEFAULT_AMPLITUDE)
+                    );
+                } else {
+                    // ✅ Below API 26
+                    vibrator.vibrate(50);
+                }
+            }
+
+            if (item.getItemId() == R.id.nav_report) {
+                loadFragment(new ReportFragment());
+                return true;
+            } else if (item.getItemId() == R.id.nav_home) {
+                loadFragment(new DashboardFragment());
+                return true;
+            } else if (item.getItemId() == R.id.nav_menu) {
+                loadFragment(new MenuFragment());
+                return true;
+            }
+            return false;
+        });
 
         getWindow().setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_ADJUST_RESIZE);
     }
@@ -111,19 +127,6 @@ public class MainActivity extends AppCompatActivity {
         getSupportFragmentManager()
                 .beginTransaction()
                 .replace(R.id.frameContainer, fragment)
-                .commit();
-    }
-    public void openBillDetail(Sale sale) {
-        BillingFragment fragment = new BillingFragment();
-
-        Bundle bundle = new Bundle();
-        bundle.putSerializable("sale", sale);
-        fragment.setArguments(bundle);
-
-        getSupportFragmentManager()
-                .beginTransaction()
-                .replace(R.id.frameContainer, fragment)
-                .addToBackStack(null)
                 .commit();
     }
 }

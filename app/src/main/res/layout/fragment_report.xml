@@ -12,7 +12,7 @@
         android:layout_height="wrap_content"
         android:orientation="vertical"
         android:paddingHorizontal="24dp"
-        android:paddingTop="24dp"
+        android:paddingTop="32dp"
         android:paddingBottom="16dp">
 
 
@@ -21,10 +21,10 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text="Reports"
-            android:textSize="28sp"
+            android:textSize="26sp"
             android:textStyle="bold"
             android:textColor="?android:attr/textColorPrimary"
-            android:layout_marginTop="4dp"/>
+            android:layout_marginTop="2dp"/>
     </LinearLayout>
 
     <ScrollView
@@ -43,7 +43,7 @@
                 android:id="@+id/cardSalesByItem"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginBottom="12dp"
+                android:layout_marginBottom="20dp"
                 android:clickable="true"
                 android:focusable="true"
                 android:foreground="?android:attr/selectableItemBackground"
@@ -93,7 +93,7 @@
                         <TextView
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
-                            android:text="Analyze which sweets sell the most"
+                            android:text="Analyze which Item sell the most"
                             android:textSize="12sp"
                             android:textColor="?android:attr/textColorSecondary"/>
                     </LinearLayout>
@@ -106,7 +106,7 @@
                 android:id="@+id/cardHistory"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginBottom="12dp"
+                android:layout_marginBottom="20dp"
                 android:clickable="true"
                 android:focusable="true"
                 android:foreground="?android:attr/selectableItemBackground"
@@ -166,7 +166,7 @@
                 android:id="@+id/cardAnalytics"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginBottom="12dp"
+                android:layout_marginBottom="20dp"
                 android:clickable="true"
                 android:focusable="true"
                 android:foreground="?android:attr/selectableItemBackground"

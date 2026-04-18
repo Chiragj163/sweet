@@ -532,7 +532,7 @@ public class BillingFragment extends Fragment {
         double totalSGST = 0;
         double totalCGST = 0;
         int itemCount = cartList.size();
-        int pageHeight = startY + (itemCount * lineHeight) + 350;
+        int pageHeight = startY + (itemCount * lineHeight) + 400;
         double discount = 0;
         try {
             discount = Double.parseDouble(etDiscount.getText().toString());

@@ -12,17 +12,17 @@
         android:layout_height="wrap_content"
         android:orientation="vertical"
         android:paddingHorizontal="24dp"
-        android:paddingTop="24dp"
+        android:paddingTop="32dp"
         android:paddingBottom="16dp">
 
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text="Sales History"
-            android:textSize="28sp"
+            android:textSize="26sp"
             android:textStyle="bold"
             android:textColor="?android:attr/textColorPrimary"
-            android:layout_marginTop="4dp"/>
+            android:layout_marginTop="2dp"/>
     </LinearLayout>
 
     <LinearLayout

@@ -3,15 +3,12 @@ package com.example.sweet;
 import android.os.Bundle;
 import android.text.Editable;
 import android.text.TextWatcher;
-import android.util.Log;
 import android.view.*;
 import android.widget.EditText;
 import android.widget.TextView;
-import android.widget.Toast;
 
 import androidx.fragment.app.Fragment;
 import androidx.recyclerview.widget.GridLayoutManager;
-import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
@@ -30,7 +27,7 @@ public class MenuFragment extends Fragment {
             "All" ,"Sweet", "Snacks", "Soft Drink", "Ice Cream"
     );
 
-    List<Item> fullList = new ArrayList<>();   // 🔥 original data
+    List<Item> fullList = new ArrayList<>();
     MenuItemAdapter adapter;
 
     @Override
@@ -47,7 +44,6 @@ public class MenuFragment extends Fragment {
 
         db = new DatabaseHelper(getContext());
         fabCart.setOnClickListener(v -> {
-            // 🔥 Open Billing Fragment
             requireActivity().getSupportFragmentManager()
                     .beginTransaction()
                     .replace(R.id.frameContainer, new BillingFragment())
@@ -78,6 +74,12 @@ public class MenuFragment extends Fragment {
 
         rvCategories.setAdapter(categoryAdapter);
     }
+    @Override
+    public void onResume() {
+        super.onResume();
+        updateCartCount();
+       // adapter.notifyDataSetChanged(); // 🔥 sync qty UI
+    }
 
     // ================= ITEMS =================
 
@@ -92,7 +94,11 @@ public class MenuFragment extends Fragment {
         rvItems.setHasFixedSize(true);
     }
     private void updateCartCount() {
-        int count = CartManager.getInstance().getCart().size();
+        int count = 0;
+
+        for (CartItem item : CartManager.getInstance().getCart()) {
+            count += item.getQty(); // 🔥 total qty
+        }
 
         if (count == 0) {
             tvCartCount.setVisibility(View.GONE);
@@ -105,15 +111,13 @@ public class MenuFragment extends Fragment {
 
         fullList.clear();
         fullList.addAll(db.getItemsByCategory(category));
-        List<Item> items = db.getItemsByCategory(category);
+
         adapter.updateList(fullList);
-        adapter.notifyDataSetChanged();
 
         rvItems.setVisibility(View.VISIBLE);
 
         etSearch.setText("");
     }
-
     // ================= SEARCH =================
 
     private void setupSearch() {
