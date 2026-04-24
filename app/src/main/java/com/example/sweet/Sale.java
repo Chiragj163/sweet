@@ -8,6 +8,7 @@ public class Sale implements Serializable{
     private double amount;
     private String summary;
     private String date;
+    private String paymentMode;
 
     public List<SaleItemRow> items = new ArrayList<>();
 
@@ -28,4 +29,6 @@ public class Sale implements Serializable{
     public void setBillNo(int billNo) {this.billNo = billNo;}
     public String getDate() { return date; }
     public void setDate(String date) { this.date = date; }
+    public String getPaymentMode() {return paymentMode;}
+    public void setPaymentMode(String paymentMode) {this.paymentMode = paymentMode;}
 }

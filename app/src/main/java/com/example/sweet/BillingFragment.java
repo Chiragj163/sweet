@@ -26,7 +26,7 @@ public class BillingFragment extends Fragment {
     private static final UUID PRINTER_UUID =
             UUID.fromString("00001101-0000-1000-8000-00805F9B34FB");
 
-    Spinner spItems;
+    Spinner spItems , spPaymentMode;
     EditText etQty, etDiscount, etPhone;
     Button btnAddToBill, btnGeneratePDF;
     Button btnConnectPrinter;
@@ -175,6 +175,14 @@ public class BillingFragment extends Fragment {
         });
         helper.attachToRecyclerView(recyclerBill);
 
+
+        String[] paymentModes = {"Cash", "Online"};
+
+        spPaymentMode.setAdapter(new ArrayAdapter<>(
+                getContext(),
+                android.R.layout.simple_spinner_dropdown_item,
+                paymentModes
+        ));
         return view;
     }
     @Override
@@ -239,7 +247,7 @@ public class BillingFragment extends Fragment {
         btnGeneratePDF = view.findViewById(R.id.btnGeneratePDF);
         tvTotal = view.findViewById(R.id.tvTotal);
         tvFinal = view.findViewById(R.id.tvFinal);
-
+        spPaymentMode = view.findViewById(R.id.spPaymentMode);
         db = new DatabaseHelper(getContext());
     }
 
@@ -355,6 +363,11 @@ public class BillingFragment extends Fragment {
     // ================= SAVE + SHARE =================
 
     private void generateBill() {
+        String paymentMode = "Cash"; // default
+
+        if (spPaymentMode != null && spPaymentMode.getSelectedItem() != null) {
+            paymentMode = spPaymentMode.getSelectedItem().toString();
+        }
         double totalSGST = 0;
         double totalCGST = 0;
 
@@ -393,30 +406,32 @@ public class BillingFragment extends Fragment {
 
         finalAmount = Math.max(0, total - discount);
 
-        // 🔥 SAVE TO NEW DATABASE
-        if (currentBillNo == 0) {
-            currentBillNo = db.saveSale(totalBase, totalGST, discount, finalAmount, cartList);
-        }
+
+            currentBillNo = db.saveSale(totalBase, totalGST, discount, finalAmount, paymentMode, cartList);
+
 
         currentBillId = new SimpleDateFormat("ddMMyy", Locale.getDefault())
                 .format(new Date()) + "-" + String.format("%03d", currentBillNo);
 
         // 🔥 USE BILL NUMBER (optional but powerful)
-        Toast.makeText(getContext(), "Bill Saved: #" + currentBillId, Toast.LENGTH_SHORT).show();
+
 
         // 🔥 OUTPUT
         String phone = etPhone.getText().toString().trim();
 
-
+        boolean success = false;
         if (isPrinterConnected()) {
             printThermalBill();
         } else if (phone.length() == 10) {
-            sendToWhatsApp(phone);
+            sendToWhatsApp(phone, paymentMode);
         } else {
             generatePDF();
         }
-        CartManager.getInstance().clearCart();
-        resetBill();
+
+            CartManager.getInstance().clearCart();
+            Toast.makeText(getContext(), "Bill Saved: #" + currentBillId, Toast.LENGTH_SHORT).show();
+            resetBill();
+
     }
 
     private void resetBill() {
@@ -432,7 +447,7 @@ public class BillingFragment extends Fragment {
 
     // ================= WHATSAPP =================
 
-    private void sendToWhatsApp(String number) {
+    private void sendToWhatsApp(String number ,String paymentMode) {
 
         double totalSGST = 0, totalCGST = 0, totalGST = 0, totalBase = 0;
 
@@ -458,6 +473,7 @@ public class BillingFragment extends Fragment {
 
         msg.append("Date: ").append(date).append("\n");
         msg.append("--------------------------------\n");
+        msg.append("Payment: ").append(paymentMode).append("\n");
         msg.append("Bill No: ").append(currentBillId).append("\n");
         msg.append("--------------------------------\n");
 
@@ -525,7 +541,7 @@ public class BillingFragment extends Fragment {
     // ================= PDF =================
 
     private void generatePDF() {
-
+        String paymentMode = spPaymentMode.getSelectedItem().toString();
         int pageWidth = 380; // 🔥 58mm paper
         int startY = 40;
         int lineHeight = 25;
@@ -588,6 +604,7 @@ public class BillingFragment extends Fragment {
         canvas.drawText("==================================================", 10, y, normalPaint);
         y += lineHeight;
         canvas.drawText("Bill No: " + currentBillId, pageWidth / 2f, y, centerPaint);
+        canvas.drawText("Payment: " + paymentMode, 10, y, normalPaint);
         y += lineHeight;
         canvas.drawText("==================================================", 10, y, normalPaint);
         y += lineHeight;
@@ -830,6 +847,7 @@ public class BillingFragment extends Fragment {
                 Toast.makeText(getContext(), "Printer not connected", Toast.LENGTH_SHORT).show();
                 return;
             }
+            String paymentMode = spPaymentMode.getSelectedItem().toString();
             double totalGST = 0;
             double totalBase = 0;
             double totalSGST = 0;
@@ -852,6 +870,7 @@ public class BillingFragment extends Fragment {
                             .getBytes()
             );
             outputStream.write(("Bill No: " + currentBillId + "\n").getBytes());
+            outputStream.write(("Payment: " + paymentMode + "\n").getBytes());
 
             // 🔥 LEFT ALIGN (for rest)
             outputStream.write(new byte[]{0x1B, 0x61, 0x00});

@@ -28,7 +28,8 @@ public class SalesHistoryFragment extends Fragment {
     DatabaseHelper db;
     EditText etSearchBill;
     Button btnSearch, btnFilterDate;
-
+    Button btnPaymentFilter;
+    String selectedPayment = "All";
     SalesHistoryGroupedAdapter adapter;
     List<Sale> sales;
 
@@ -41,7 +42,7 @@ public class SalesHistoryFragment extends Fragment {
         etSearchBill = view.findViewById(R.id.etSearchBill);
        // btnSearch = view.findViewById(R.id.btnSearch);
         btnFilterDate = view.findViewById(R.id.btnFilterDate);
-
+        btnPaymentFilter = view.findViewById(R.id.btnPaymentFilter);
         db = new DatabaseHelper(requireContext());
 
         // 🔥 Load all sales initially
@@ -95,6 +96,25 @@ public class SalesHistoryFragment extends Fragment {
 
             @Override
             public void afterTextChanged(android.text.Editable s) {}
+        });
+        btnPaymentFilter.setOnClickListener(v -> {
+
+            PopupMenu menu = new PopupMenu(getContext(), btnPaymentFilter);
+
+            menu.getMenu().add("All");
+            menu.getMenu().add("Cash");
+            menu.getMenu().add("Online");
+
+            menu.setOnMenuItemClickListener(item -> {
+
+                selectedPayment = item.getTitle().toString();
+
+                loadSales(); // 🔥 reload list
+
+                return true;
+            });
+
+            menu.show();
         });
 
         // ================= DATE FILTER =================
@@ -241,5 +261,18 @@ public class SalesHistoryFragment extends Fragment {
                 .replace(R.id.frameContainer, fragment)
                 .addToBackStack(null)
                 .commit();
+    }
+    private void loadSales() {
+
+        List<Sale> list;
+
+        if (selectedPayment.equals("All")) {
+            list = db.getAllSales();
+        } else {
+            list = db.getSalesByPaymentMode(selectedPayment);
+        }
+
+        adapter = new SalesHistoryGroupedAdapter(getContext(), list);
+        listView.setAdapter(adapter);
     }
 }

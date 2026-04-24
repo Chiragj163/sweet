@@ -1,132 +1,140 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout
+<androidx.constraintlayout.widget.ConstraintLayout
     xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:orientation="vertical"
     android:background="?android:attr/colorBackground">
 
     <LinearLayout
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
+        android:layout_height="match_parent"
         android:orientation="vertical"
-        android:paddingHorizontal="24dp"
-        android:paddingTop="32dp"
-        android:paddingBottom="16dp">
-
-
-
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="Sale by Item"
-            android:textSize="26sp"
-            android:textStyle="bold"
-            android:textColor="?android:attr/textColorPrimary"
-            android:layout_marginTop="2dp"/>
-    </LinearLayout>
-
-    <LinearLayout
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:orientation="horizontal"
-        android:paddingHorizontal="20dp"
-        android:gravity="center_vertical"
-        android:layout_marginBottom="12dp">
-
-        <com.google.android.material.button.MaterialButton
-            android:id="@+id/btnItemFilter"
-            style="@style/Widget.MaterialComponents.Button.UnelevatedButton"
-            android:layout_width="wrap_content"
-            android:layout_height="40dp"
-            android:text="Date Filter"
-            android:textSize="12sp"
-            app:icon="@android:drawable/ic_menu_today"
-            app:iconSize="16dp"
-            app:iconTint="?attr/colorPrimary"
-            android:textColor="?attr/colorPrimary"
-            app:cornerRadius="8dp"
-            app:backgroundTint="?attr/colorSurfaceVariant"/>
-
-        <Space
-            android:layout_width="0dp"
-            android:layout_weight="1"
-            android:layout_height="wrap_content"/>
+        app:layout_constraintWidth_max="800dp"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent">
 
         <LinearLayout
-            android:layout_width="wrap_content"
-            android:layout_height="40dp"
-            android:orientation="horizontal"
-            android:gravity="center_vertical"
-            android:background="?attr/colorSurfaceVariant"
-            android:paddingHorizontal="12dp">
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:paddingHorizontal="24dp"
+            android:paddingTop="32dp"
+            android:paddingBottom="16dp">
 
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="Category:"
-                android:textSize="12sp"
+                android:text="Sale by Item"
+                android:textSize="26sp"
                 android:textStyle="bold"
-                android:textColor="?android:attr/textColorSecondary"
-                android:layout_marginEnd="4dp"/>
-
-            <Spinner
-                android:id="@+id/spCategory"
-                android:layout_width="wrap_content"
-                android:layout_height="match_parent"
-                android:minWidth="100dp"
-                android:background="@null"
-                android:gravity="end|center_vertical" />
+                android:textColor="?android:attr/textColorPrimary"/>
         </LinearLayout>
-    </LinearLayout>
-
-   <ListView
-        android:id="@+id/listItems"
-        android:layout_width="match_parent"
-        android:layout_height="0dp"
-        android:layout_weight="1"
-        android:clipToPadding="false"
-        android:paddingHorizontal="16dp"
-        android:paddingBottom="16dp"
-       />
-
-    <com.google.android.material.card.MaterialCardView
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_marginHorizontal="16dp"
-        android:layout_marginBottom="24dp"
-        app:cardCornerRadius="16dp"
-        app:cardElevation="8dp"
-        app:strokeWidth="0dp"
-        app:cardBackgroundColor="?attr/colorPrimary">
 
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="horizontal"
-            android:paddingHorizontal="24dp"
-            android:paddingVertical="16dp"
-            android:gravity="center_vertical">
+            android:paddingHorizontal="20dp"
+            android:gravity="center_vertical"
+            android:layout_marginBottom="12dp">
 
-            <TextView
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/btnItemFilter"
+                style="@style/Widget.MaterialComponents.Button.UnelevatedButton"
+                android:layout_width="wrap_content"
+                android:layout_height="44dp"
+                android:text="Date Filter"
+                app:icon="@android:drawable/ic_menu_today"
+                app:iconSize="16dp"
+                app:cornerRadius="12dp"
+                app:backgroundTint="?attr/colorSurfaceVariant"
+                android:textColor="?attr/colorPrimary"
+                app:iconTint="?attr/colorPrimary"
+                android:textSize="12sp"/>
+
+            <Space
                 android:layout_width="0dp"
                 android:layout_weight="1"
-                android:layout_height="wrap_content"
-                android:text="Total Revenue"
-                android:textSize="16sp"
-                android:textStyle="bold"
-                android:textColor="?attr/colorOnPrimary"/>
+                android:layout_height="wrap_content"/>
 
-            <TextView
-                android:id="@+id/tvTotal"
+            <com.google.android.material.card.MaterialCardView
                 android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="₹0.00"
-                android:textSize="20sp"
-                android:textStyle="bold"
-                android:textColor="?attr/colorOnPrimary"/>
-        </LinearLayout>
-    </com.google.android.material.card.MaterialCardView>
+                android:layout_height="44dp"
+                app:cardCornerRadius="12dp"
+                app:cardElevation="0dp"
+                app:cardBackgroundColor="?attr/colorSurfaceVariant">
 
-</LinearLayout>
+                <LinearLayout
+                    android:layout_width="wrap_content"
+                    android:layout_height="match_parent"
+                    android:gravity="center_vertical"
+                    android:paddingHorizontal="12dp">
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Category:"
+                        android:textSize="11sp"
+                        android:textStyle="bold"
+                        android:textColor="?android:attr/textColorSecondary"
+                        android:layout_marginEnd="4dp"/>
+                    <Spinner
+                        android:id="@+id/spCategory"
+                        android:layout_width="wrap_content"
+                        android:layout_height="match_parent"
+                        android:minWidth="100dp"
+                        android:background="@null"/>
+                </LinearLayout>
+            </com.google.android.material.card.MaterialCardView>
+        </LinearLayout>
+
+        <ListView
+            android:id="@+id/listItems"
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:layout_weight="1"
+            android:clipToPadding="false"
+            android:paddingHorizontal="16dp"
+            android:paddingBottom="16dp"/>
+
+        <com.google.android.material.card.MaterialCardView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginHorizontal="16dp"
+            android:layout_marginBottom="24dp"
+            app:cardCornerRadius="20dp"
+            app:cardElevation="8dp"
+            app:strokeWidth="0dp"
+            app:cardBackgroundColor="?attr/colorPrimary">
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:paddingHorizontal="24dp"
+                android:paddingVertical="18dp"
+                android:gravity="center_vertical">
+
+                <TextView
+                    android:layout_width="0dp"
+                    android:layout_weight="1"
+                    android:layout_height="wrap_content"
+                    android:text="Total Revenue"
+                    android:textSize="16sp"
+                    android:textStyle="bold"
+                    android:textColor="?attr/colorOnPrimary"/>
+
+                <TextView
+                    android:id="@+id/tvTotal"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="₹0.00"
+                    android:textSize="22sp"
+                    android:textStyle="bold"
+                    android:textColor="?attr/colorOnPrimary"/>
+            </LinearLayout>
+        </com.google.android.material.card.MaterialCardView>
+
+    </LinearLayout>
+</androidx.constraintlayout.widget.ConstraintLayout>

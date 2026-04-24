@@ -93,9 +93,9 @@ public class DashboardFragment extends Fragment {
     private void loadDashboard(View view) {
 
         animateValue(tvSales, db.getTodaySales());
-        tvTotalBills.setText("Bills: " + db.getTotalBills());
-        animateValue(tvAvgBill, db.getAverageBill());
-        tvTopItem.setText("Top: " + db.getTopItem());
+        tvTotalBills.setText(" " + db.getTodayBills());
+        animateValue(tvAvgBill, db.getTodayAverageBill());
+        tvTopItem.setText(" " + db.getTodayTopItem());
 
         loadChart();
     }

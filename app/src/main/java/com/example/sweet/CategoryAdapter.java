@@ -74,14 +74,19 @@ public class CategoryAdapter extends RecyclerView.Adapter<CategoryAdapter.ViewHo
             holder.cardCategory.setCardElevation(2f);
         }
 
-        // 🔥 CLICK
+        // Inside onBindViewHolder, update the Click listener
         holder.cardCategory.setOnClickListener(v -> {
-            int prev = selectedPosition;
-            selectedPosition = holder.getAdapterPosition();
+            int currentPos = holder.getBindingAdapterPosition();
+            if (currentPos == RecyclerView.NO_POSITION || currentPos == selectedPosition) return;
 
+            int prev = selectedPosition;
+            selectedPosition = currentPos;
+
+            // Refresh both old and new selection
             notifyItemChanged(prev);
             notifyItemChanged(selectedPosition);
 
+            // Provide the category to the fragment
             listener.onClick(category);
         });
     }

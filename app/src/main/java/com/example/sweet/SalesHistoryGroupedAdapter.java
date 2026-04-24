@@ -18,7 +18,7 @@ public class SalesHistoryGroupedAdapter extends ArrayAdapter<Sale> {
     }
 
     static class ViewHolder {
-        TextView tvDate, tvTotal, tvBillNo;
+        TextView tvDate, tvTotal, tvBillNo , tvPaymentMode;
         LinearLayout container;
     }
 
@@ -36,7 +36,7 @@ public class SalesHistoryGroupedAdapter extends ArrayAdapter<Sale> {
             holder.tvTotal = convertView.findViewById(R.id.tvTotal);
             holder.container = convertView.findViewById(R.id.itemsContainer);
             holder.tvBillNo = convertView.findViewById(R.id.tvBillNo);
-
+            holder.tvPaymentMode = convertView.findViewById(R.id.tvPaymentMode);
             convertView.setTag(holder);
         } else {
             holder = (ViewHolder) convertView.getTag();
@@ -58,6 +58,16 @@ public class SalesHistoryGroupedAdapter extends ArrayAdapter<Sale> {
 
                 holder.tvBillNo.setText("🧾 " + billId);
                 holder.tvDate.setText(output.format(d));
+                String mode = sale.getPaymentMode();
+
+                if (mode == null || mode.isEmpty()) {
+                    mode = "Cash"; // default fallback
+                }
+
+// Emoji (optional)
+                String display = mode.equalsIgnoreCase("Online") ? " 🌐 Online" : " 💵 Cash";
+
+                holder.tvPaymentMode.setText(display);
 
             } catch (Exception e) {
                 holder.tvDate.setText(sale.getDate());
@@ -75,15 +85,14 @@ public class SalesHistoryGroupedAdapter extends ArrayAdapter<Sale> {
                 TextView tvItem = row.findViewById(R.id.tvItem);
                 TextView tvQty = row.findViewById(R.id.tvQty);
                 TextView tvAmount = row.findViewById(R.id.tvAmount);
-                TextView tvGst = row.findViewById(R.id.tvGst);
-
+                //TextView tvGst = row.findViewById(R.id.tvGst);
                 tvItem.setText(item.name);
                 tvQty.setText(String.format(Locale.getDefault(), "%.0f", item.qty));
                 tvAmount.setText("₹" + String.format(Locale.getDefault(), "%.2f", item.total));
 
-                if (tvGst != null) {
-                    tvGst.setText(item.gstRate + "%");
-                }
+//                if (tvGst != null) {
+//                    tvGst.setText(item.gstRate + "%");
+//                }
 
                 holder.container.addView(row);
             }

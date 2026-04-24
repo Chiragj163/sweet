@@ -9,6 +9,7 @@ import android.widget.TextView;
 
 import androidx.fragment.app.Fragment;
 import androidx.recyclerview.widget.GridLayoutManager;
+import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
@@ -65,9 +66,8 @@ public class MenuFragment extends Fragment {
     // ================= CATEGORY =================
 
     private void setupCategories() {
-
-        rvCategories.setLayoutManager(new GridLayoutManager(getContext(), 3));
-
+        LinearLayoutManager layoutManager = new LinearLayoutManager(getContext(), LinearLayoutManager.HORIZONTAL, false);
+        rvCategories.setLayoutManager(layoutManager);
         CategoryAdapter categoryAdapter = new CategoryAdapter(categories, category -> {
             loadItems(category);
         });
@@ -84,7 +84,10 @@ public class MenuFragment extends Fragment {
     // ================= ITEMS =================
 
     private void setupItemsRecycler() {
-        rvItems.setLayoutManager(new GridLayoutManager(getContext(),3));
+        int screenWidthDp = getResources().getConfiguration().screenWidthDp;
+        int columnCount = screenWidthDp / 160; // 160dp is a good minimum width for a card
+        if (columnCount < 2) columnCount = 2;
+        rvItems.setLayoutManager(new GridLayoutManager(getContext(), columnCount));
 
         adapter = new MenuItemAdapter(fullList, () -> {
             updateCartCount();

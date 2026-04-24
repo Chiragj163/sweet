@@ -18,7 +18,7 @@ import com.github.mikephil.charting.data.PieEntry;
 public class DatabaseHelper extends SQLiteOpenHelper {
 
     private static final String DB_NAME = "SweetShopDB";
-    private static final int DB_VERSION = 6;
+    private static final int DB_VERSION = 7;
 
     public static final String TABLE_ITEMS = "items";
 
@@ -64,12 +64,9 @@ public class DatabaseHelper extends SQLiteOpenHelper {
     }
     @Override
     public void onUpgrade(SQLiteDatabase db, int oldVersion, int newVersion) {
-
-        db.execSQL("DROP TABLE IF EXISTS sale_items");
-        db.execSQL("DROP TABLE IF EXISTS sales");
-        db.execSQL("DROP TABLE IF EXISTS items");
-
-        onCreate(db);
+        if (oldVersion < 7) {
+            db.execSQL("ALTER TABLE sales ADD COLUMN payment_mode TEXT");
+        }
     }
     public void insertItem(String name, double price, String unit,
                            double gstRate, String category, String image) {
@@ -239,7 +236,7 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         cursor.close();
         return avg;
     }
-    public long saveSale(double subtotal, double gst, double discount, double total, List<CartItem> cartList) {
+    public long saveSale(double subtotal, double gst, double discount, double total, String paymentMode, List<CartItem> cartList){
 
         SQLiteDatabase db = this.getWritableDatabase();
 
@@ -253,6 +250,7 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         values.put("subtotal", subtotal);
         values.put("gst", gst);
         values.put("discount", discount);
+        values.put("payment_mode", paymentMode);
         values.put("total", total);
 
         db.beginTransaction();
@@ -311,24 +309,32 @@ public class DatabaseHelper extends SQLiteOpenHelper {
 
         while (cursor.moveToNext()) {
 
-            int saleId = cursor.getInt(0);     // ✅ ID
-            int billNo = cursor.getInt(1);     // ✅ bill_no
-            String date = cursor.getString(2); // ✅ date
-            double total = cursor.getDouble(6); // ✅ total
+            int saleId = cursor.getInt(0);
+            int billNo = cursor.getInt(1);
+            String date = cursor.getString(2);
+
+            // 🔥 SAFE PAYMENT MODE
+            int index = cursor.getColumnIndex("payment_mode");
+            String paymentMode = "Cash";
+
+            if (index != -1 && !cursor.isNull(index)) {
+                paymentMode = cursor.getString(index);
+            }
+
+            double total = cursor.getDouble(6);
 
             Sale s = new Sale();
-            s.setBillNo(billNo);   // 🔥 IMPORTANT
+            s.setBillNo(billNo);
+            s.setPaymentMode(paymentMode);
             s.setDate(date);
             s.setAmount(total);
 
-            // 🔥 GET ITEMS
             Cursor itemCursor = db.rawQuery(
                     "SELECT name, qty, price, total, gst_rate FROM sale_items WHERE sale_id=?",
                     new String[]{String.valueOf(saleId)}
             );
 
             while (itemCursor.moveToNext()) {
-
                 s.items.add(new SaleItemRow(
                         date,
                         itemCursor.getString(0),
@@ -833,5 +839,121 @@ public class DatabaseHelper extends SQLiteOpenHelper {
 
         c.close();
         return total;
+    }
+    public List<Sale> getSalesByPaymentMode(String mode) {
+
+        List<Sale> list = new ArrayList<>();
+        SQLiteDatabase db = this.getReadableDatabase();
+
+        Cursor cursor = db.rawQuery(
+                "SELECT * FROM sales WHERE payment_mode=? ORDER BY id DESC",
+                new String[]{mode}
+        );
+
+        while (cursor.moveToNext()) {
+
+            int saleId = cursor.getInt(0);
+            int billNo = cursor.getInt(1);
+            String date = cursor.getString(2);
+            String paymentMode = cursor.getString(cursor.getColumnIndexOrThrow("payment_mode"));
+            double total = cursor.getDouble(6);
+
+            Sale s = new Sale();
+            s.setBillNo(billNo);
+            s.setPaymentMode(paymentMode);
+            s.setDate(date);
+            s.setAmount(total);
+
+            // 🔥 Load items
+            Cursor itemCursor = db.rawQuery(
+                    "SELECT name, qty, price, total, gst_rate FROM sale_items WHERE sale_id=?",
+                    new String[]{String.valueOf(saleId)}
+            );
+
+            while (itemCursor.moveToNext()) {
+                s.items.add(new SaleItemRow(
+                        date,
+                        itemCursor.getString(0),
+                        itemCursor.getDouble(1),
+                        itemCursor.getDouble(2),
+                        itemCursor.getDouble(3),
+                        itemCursor.getDouble(4)
+                ));
+            }
+
+            itemCursor.close();
+            list.add(s);
+        }
+
+        cursor.close();
+        return list;
+    }
+    public int getTodayBills() {
+
+        SQLiteDatabase db = this.getReadableDatabase();
+
+        String today = new SimpleDateFormat("yyyy-MM-dd", Locale.getDefault())
+                .format(new Date());
+
+        Cursor cursor = db.rawQuery(
+                "SELECT COUNT(*) FROM sales WHERE date LIKE ?",
+                new String[]{today + "%"}
+        );
+
+        int count = 0;
+
+        if (cursor.moveToFirst()) {
+            count = cursor.getInt(0);
+        }
+
+        cursor.close();
+        return count;
+    }
+    public double getTodayAverageBill() {
+
+        SQLiteDatabase db = this.getReadableDatabase();
+
+        String today = new SimpleDateFormat("yyyy-MM-dd", Locale.getDefault())
+                .format(new Date());
+
+        Cursor cursor = db.rawQuery(
+                "SELECT AVG(total) FROM sales WHERE date LIKE ?",
+                new String[]{today + "%"}
+        );
+
+        double avg = 0;
+
+        if (cursor.moveToFirst() && !cursor.isNull(0)) {
+            avg = cursor.getDouble(0);
+        }
+
+        cursor.close();
+        return avg;
+    }
+    public String getTodayTopItem() {
+
+        SQLiteDatabase db = this.getReadableDatabase();
+
+        String today = new SimpleDateFormat("yyyy-MM-dd", Locale.getDefault())
+                .format(new Date());
+
+        Cursor cursor = db.rawQuery(
+                "SELECT si.name, SUM(si.qty) as total_qty " +
+                        "FROM sale_items si " +
+                        "JOIN sales s ON si.sale_id = s.id " +
+                        "WHERE s.date LIKE ? " +
+                        "GROUP BY si.name " +
+                        "ORDER BY total_qty DESC LIMIT 1",
+                new String[]{today + "%"}
+        );
+
+        String result = "N/A";
+
+        if (cursor.moveToFirst()) {
+            result = cursor.getString(0) + " (" + cursor.getDouble(1) + ")";
+        }
+
+        cursor.close();
+        return result;
     }
 }
