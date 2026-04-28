@@ -95,43 +95,55 @@ public class ItemAdapter extends RecyclerView.Adapter<ItemAdapter.ViewHolder> {
         // ================= EDIT =================
         holder.btnEdit.setOnClickListener(v -> {
 
+            selectedImagePath = null; // ✅ IMPORTANT FIX
+
             View dialogView = LayoutInflater.from(context)
                     .inflate(R.layout.dialog_edit_item, null);
 
             EditText etName = dialogView.findViewById(R.id.etEditName);
             EditText etPrice = dialogView.findViewById(R.id.etEditPrice);
             Spinner spCategory = dialogView.findViewById(R.id.spEditCategory);
+            Spinner spUnit = dialogView.findViewById(R.id.spEditUnit);
+            Spinner spGst = dialogView.findViewById(R.id.spEditGst);
             ImageView imgPreview = dialogView.findViewById(R.id.imgEditItem);
             Button btnPickImage = dialogView.findViewById(R.id.btnPickImage);
 
-            // OLD IMAGE
             if (item.getImage() != null && !item.getImage().isEmpty()) {
                 Glide.with(context).load(item.getImage()).into(imgPreview);
             }
 
-            // Categories
             String[] categories = {"Sweet", "Snacks", "Soft Drink", "Ice Cream"};
-            ArrayAdapter<String> catAdapter = new ArrayAdapter<>(
-                    context,
-                    android.R.layout.simple_spinner_dropdown_item,
-                    categories
-            );
-            spCategory.setAdapter(catAdapter);
+            spCategory.setAdapter(new ArrayAdapter<>(context,
+                    android.R.layout.simple_spinner_dropdown_item, categories));
+
+            String[] units = {"KG", "Piece"};
+            spUnit.setAdapter(new ArrayAdapter<>(context,
+                    android.R.layout.simple_spinner_dropdown_item, units));
+
+            String[] gstRates = {"0", "5", "18", "40"};
+            spGst.setAdapter(new ArrayAdapter<>(context,
+                    android.R.layout.simple_spinner_dropdown_item, gstRates));
 
             etName.setText(item.getName());
             etPrice.setText(String.valueOf(item.getPrice()));
 
-            int index = Arrays.asList(categories).indexOf(item.getCategory());
-            if (index >= 0) spCategory.setSelection(index);
+            // restore selections
+            int catIndex = Arrays.asList(categories).indexOf(item.getCategory());
+            if (catIndex >= 0) spCategory.setSelection(catIndex);
 
-            // 🔥 IMAGE PICK BUTTON
+            int unitIndex = Arrays.asList(units).indexOf(item.getUnit());
+            if (unitIndex >= 0) spUnit.setSelection(unitIndex);
+
+            int gstIndex = Arrays.asList(gstRates)
+                    .indexOf(String.valueOf((int)Math.round(item.getGstRate())));
+            if (gstIndex >= 0) spGst.setSelection(gstIndex);
+
             btnPickImage.setOnClickListener(v1 -> {
                 Intent intent = new Intent(Intent.ACTION_PICK);
                 intent.setType("image/*");
                 ((Activity) context).startActivityForResult(intent, PICK_IMAGE_EDIT);
             });
 
-            // Dialog
             AlertDialog dialog = new AlertDialog.Builder(context)
                     .setTitle("Edit Item")
                     .setView(dialogView)
@@ -141,17 +153,12 @@ public class ItemAdapter extends RecyclerView.Adapter<ItemAdapter.ViewHolder> {
 
             dialog.show();
 
-            Button btnUpdate = dialog.getButton(AlertDialog.BUTTON_POSITIVE);
-
-            btnUpdate.setOnClickListener(v2 -> {
+            dialog.getButton(AlertDialog.BUTTON_POSITIVE).setOnClickListener(v2 -> {
 
                 int pos = holder.getAdapterPosition();
                 if (pos == RecyclerView.NO_POSITION) return;
 
-                Item currentItem = list.get(pos);
-
                 String newName = etName.getText().toString();
-
                 if (newName.isEmpty()) {
                     Toast.makeText(context, "Enter name", Toast.LENGTH_SHORT).show();
                     return;
@@ -166,41 +173,20 @@ public class ItemAdapter extends RecyclerView.Adapter<ItemAdapter.ViewHolder> {
                 }
 
                 String newCategory = spCategory.getSelectedItem().toString();
+                String newUnit = spUnit.getSelectedItem().toString();
+                double newGst = Double.parseDouble(spGst.getSelectedItem().toString());
 
-                // 🔥 FINAL IMAGE (IMPORTANT)
                 String finalImage = selectedImagePath != null
                         ? selectedImagePath
-                        : currentItem.getImage();
+                        : item.getImage();
 
-                // UPDATE DB
-                db.updateItem(
-                        currentItem.getId(),
-                        newName,
-                        newPrice,
-                        currentItem.getUnit(),
-                        currentItem.getGstRate(),
-                        newCategory,
-                        finalImage
-                );
+                db.updateItem(item.getId(), newName, newPrice, newUnit, newGst, newCategory, finalImage);
 
-                // UPDATE LIST
-                list.set(pos, new Item(
-                        currentItem.getId(),
-                        newName,
-                        newPrice,
-                        currentItem.getUnit(),
-                        currentItem.getGstRate(),
-                        newCategory,
-                        finalImage
-                ));
+                list.set(pos, new Item(item.getId(), newName, newPrice, newUnit, newGst, newCategory, finalImage));
 
                 notifyItemChanged(pos);
 
                 Toast.makeText(context, "Item Updated", Toast.LENGTH_SHORT).show();
-
-                // RESET
-                selectedImagePath = null;
-
                 dialog.dismiss();
             });
         });

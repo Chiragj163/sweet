@@ -4,6 +4,7 @@ import android.annotation.SuppressLint;
 import android.bluetooth.*;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.content.pm.PackageManager;
 import android.graphics.*;
 import android.graphics.pdf.PdfDocument;
 import android.net.Uri;
@@ -20,7 +21,12 @@ import java.io.FileOutputStream;
 import java.io.OutputStream;
 import java.text.SimpleDateFormat;
 import java.util.*;
-
+import android.graphics.Bitmap;
+import android.graphics.pdf.PdfRenderer;
+import android.os.ParcelFileDescriptor;
+import java.io.File;
+import java.io.IOException;
+import java.io.OutputStream;
 public class BillingFragment extends Fragment {
 
     private static final UUID PRINTER_UUID =
@@ -134,14 +140,14 @@ public class BillingFragment extends Fragment {
         SharedPreferences prefs = requireContext().getSharedPreferences("printer", 0);
         String mac = prefs.getString("mac", null);
 
-        if (mac != null && BluetoothAdapter.getDefaultAdapter() != null) {
-            try {
-                BluetoothDevice device = BluetoothAdapter.getDefaultAdapter().getRemoteDevice(mac);
-                connectToDevice(device);
-            } catch (Exception e) {
-                e.printStackTrace();
+            if (mac != null && BluetoothAdapter.getDefaultAdapter() != null) {
+                try {
+                    BluetoothDevice device = BluetoothAdapter.getDefaultAdapter().getRemoteDevice(mac);
+                    connectToDevice(device);
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
             }
-        }
         String[] categories = {"All", "Sweet", "Snacks", "Soft Drink", "Ice Cream"};
 
         spFilterCategory.setAdapter(new ArrayAdapter<>(
@@ -463,8 +469,10 @@ public class BillingFragment extends Fragment {
         msg.append("```").append("\n");
 
         // HEADER
-        msg.append("        🧾 SWEET SHOP\n");
-        msg.append("       Kolkata, India\n\n");
+        msg.append("        🧾 MAHABIR SWEET\n");
+        msg.append("          Rajhat, Polba\n");
+        msg.append("      fssai - 2282208500829\n");
+        msg.append("       Mob - 8910093622\n\n");
 
         String date = new java.text.SimpleDateFormat(
                 "dd MMM yyyy | hh:mm a",
@@ -514,15 +522,15 @@ public class BillingFragment extends Fragment {
         msg.append("--------------------------------\n");
 
         // TOTALS
-        msg.append(String.format("%-20s ₹%6.2f\n", "Subtotal:", totalBase));
-        msg.append(String.format("%-20s ₹%6.2f\n", "SGST:", totalSGST));
-        msg.append(String.format("%-20s ₹%6.2f\n", "CGST:", totalCGST));
+       // msg.append(String.format("%-20s ₹%6.2f\n", "Subtotal:", totalBase));
+      //  msg.append(String.format("%-20s ₹%6.2f\n", "SGST:", totalSGST));
+       // msg.append(String.format("%-20s ₹%6.2f\n", "CGST:", totalCGST));
 
         if (discount > 0) {
             msg.append(String.format("%-20s ₹%6.2f\n", "Discount:", discount));
         }
 
-        msg.append("--------------------------------\n");
+       // msg.append("--------------------------------\n");
 
         double finalAmount = totalBase + totalGST - discount;
 
@@ -590,12 +598,15 @@ public class BillingFragment extends Fragment {
         int y = startY;
 
         // ================= HEADER =================
-        canvas.drawText("SWEET SHOP", pageWidth / 2f, y, centerPaint);
+        canvas.drawText("MAHABIR SWEET", pageWidth / 2f, y, centerPaint);
         y += lineHeight;
 
-        canvas.drawText("Kolkata, India", pageWidth / 2f, y, normalPaint2);
+        canvas.drawText("Rajhat, Polba", pageWidth / 2f, y, normalPaint2);
         y += lineHeight;
-
+        canvas.drawText("fssai - 2282208500829",pageWidth/2f,y,normalPaint2);
+        y += lineHeight;
+        canvas.drawText("Mob - 8910093622",pageWidth/2f,y,normalPaint2);
+        y += lineHeight;
         String formattedDate = new java.text.SimpleDateFormat("'on' dd-MM-yyyy 'at' HH:mm",java.util.Locale.getDefault()).format(new Date());
         normalPaint2.setTextAlign(Paint.Align.CENTER);
         canvas.drawText(formattedDate, pageWidth / 2f, y, normalPaint2);
@@ -661,22 +672,22 @@ public class BillingFragment extends Fragment {
             totalBase += base;
         }
 
-        canvas.drawText("Subtotal: ₹" + String.format("%.2f", totalBase), 10, y, normalPaint);
-        y += lineHeight;
-
-        canvas.drawText("SGST: ₹" + String.format("%.2f", totalSGST), 10, y, normalPaint);
-        y += lineHeight;
-
-        canvas.drawText("CGST: ₹" + String.format("%.2f", totalCGST), 10, y, normalPaint);
-        y += lineHeight;
+//        canvas.drawText("Subtotal: ₹" + String.format("%.2f", totalBase), 10, y, normalPaint);
+//        y += lineHeight;
+//
+//        canvas.drawText("SGST: ₹" + String.format("%.2f", totalSGST), 10, y, normalPaint);
+//        y += lineHeight;
+//
+//        canvas.drawText("CGST: ₹" + String.format("%.2f", totalCGST), 10, y, normalPaint);
+//        y += lineHeight;
 
         if(discount>0) {
             canvas.drawText("Discount: ₹" + String.format("%.2f", discount), 10, y, normalPaint);
             y += lineHeight;
         }
 
-        canvas.drawText("==================================================", 10, y, normalPaint);
-        y += lineHeight;
+//        canvas.drawText("==================================================", 10, y, normalPaint);
+//        y += lineHeight;
 
         canvas.drawText("TOTAL: ₹" + String.format("%.2f", finalAmount),pageWidth/2f, y, totalBoldPaint);
         y += lineHeight + 10;
@@ -765,8 +776,10 @@ public class BillingFragment extends Fragment {
         Set<BluetoothDevice> devices;
 
         if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.S) {
-            if (requireContext().checkSelfPermission(android.Manifest.permission.BLUETOOTH_CONNECT)
-                    != android.content.pm.PackageManager.PERMISSION_GRANTED) {
+            if (getContext() != null &&
+                    getContext().checkSelfPermission(android.Manifest.permission.BLUETOOTH_CONNECT)
+                            != PackageManager.PERMISSION_GRANTED) {
+
                 requestBluetoothPermission();
                 return;
             }
@@ -813,9 +826,11 @@ public class BillingFragment extends Fragment {
 
         new Thread(() -> {
             try {
+
                 if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.S) {
-                    if (requireContext().checkSelfPermission(android.Manifest.permission.BLUETOOTH_CONNECT)
-                            != android.content.pm.PackageManager.PERMISSION_GRANTED) {
+                    if (getContext() == null ||
+                            getContext().checkSelfPermission(android.Manifest.permission.BLUETOOTH_CONNECT)
+                                    != android.content.pm.PackageManager.PERMISSION_GRANTED) {
                         return;
                     }
                 }
@@ -825,19 +840,32 @@ public class BillingFragment extends Fragment {
 
                 outputStream = btsocket.getOutputStream();
 
-                // ✅ SAVE DEVICE HERE (correct place)
-                SharedPreferences prefs = requireContext().getSharedPreferences("printer", 0);
-                prefs.edit().putString("mac", device.getAddress()).apply();
+                // ✅ Save device
+                if (getContext() != null) {
+                    SharedPreferences prefs = getContext().getSharedPreferences("printer", 0);
+                    prefs.edit().putString("mac", device.getAddress()).apply();
+                }
 
-                requireActivity().runOnUiThread(() ->
+                // ✅ SAFE UI UPDATE
+                if (isAdded() && getActivity() != null) {
+                    new android.os.Handler(android.os.Looper.getMainLooper()).post(() -> {
                         Toast.makeText(getContext(),
                                 "Connected: " + device.getName(),
-                                Toast.LENGTH_LONG).show());
+                                Toast.LENGTH_LONG).show();
+                    });
+                }
 
             } catch (Exception e) {
                 e.printStackTrace();
-                requireActivity().runOnUiThread(() ->
-                        Toast.makeText(getContext(), "Connection Failed", Toast.LENGTH_SHORT).show());
+
+                // ✅ SAFE ERROR UI
+                if (isAdded() && getActivity() != null) {
+                    new android.os.Handler(android.os.Looper.getMainLooper()).post(() -> {
+                        Toast.makeText(getContext(),
+                                "Connection Failed",
+                                Toast.LENGTH_SHORT).show();
+                    });
+                }
             }
         }).start();
     }
@@ -861,9 +889,14 @@ public class BillingFragment extends Fragment {
             // 🔥 CENTER ALIGN (for header)
             outputStream.write(new byte[]{0x1B, 0x45, 0x01});
             outputStream.write(new byte[]{0x1B, 0x61, 0x01});
-            outputStream.write("SWEET SHOP\n".getBytes());
+            outputStream.write("MAHABIR SWEET\n".getBytes());
             outputStream.write(new byte[]{0x1B, 0x45, 0x00});
-            outputStream.write("Kolkata, India\n".getBytes());
+            outputStream.write("Rajhat, Polba\n".getBytes());
+            outputStream.write(new byte[]{0x1B, 0x45, 0x00});
+            outputStream.write("fssai - 2282208500829\n".getBytes());
+            outputStream.write(new byte[]{0x1B, 0x45, 0x00});
+            outputStream.write("Mob - 8910093622\n".getBytes());
+
 
             outputStream.write(
                     (new java.text.SimpleDateFormat("dd-MM-yyyy HH:mm").format(new Date()) + "\n")
@@ -910,11 +943,28 @@ public class BillingFragment extends Fragment {
                 totalCGST += cgst;
             }
             outputStream.write("==============================\n".getBytes());
-            outputStream.write(("Subtotal: ₹" + String.format("%.2f", totalBase) + "\n").getBytes());
-            outputStream.write(("SGST: ₹" + String.format("%.2f", totalSGST) + "\n").getBytes());
-            outputStream.write(("CGST: ₹" + String.format("%.2f", totalCGST) + "\n").getBytes());
-            outputStream.write(("Discount: ₹" + String.format("%.2f", discount) + "\n").getBytes());
+           // outputStream.write(("Subtotal: ₹" + String.format("%.2f", totalBase) + "\n").getBytes());
+           // outputStream.write(("SGST: ₹" + String.format("%.2f", totalSGST) + "\n").getBytes());
+           // outputStream.write(("CGST: ₹" + String.format("%.2f", totalCGST) + "\n").getBytes());
+            if (discount > 0) {
+                outputStream.write(("Discount: ₹" + String.format(" %.2f", discount) + "\n").getBytes());
+            }
+            // 🔥 CENTER ALIGN
+            outputStream.write(new byte[]{0x1B, 0x61, 0x01});
+
+// 🔥 BOLD ON
+            outputStream.write(new byte[]{0x1B, 0x45, 0x01});
+
+// 🔥 TEXT SIZE (Width x Height = 2x2 ≈ large ~20px feel)
+            outputStream.write(new byte[]{0x1D, 0x21, 0x11});
+
+// 🔥 PRINT TEXT
             outputStream.write(("TOTAL: ₹" + String.format("%.2f", finalAmount) + "\n").getBytes());
+
+// 🔥 RESET STYLE
+            outputStream.write(new byte[]{0x1B, 0x45, 0x00}); // Bold OFF
+            outputStream.write(new byte[]{0x1D, 0x21, 0x00}); // Normal size
+            outputStream.write(new byte[]{0x1B, 0x61, 0x00}); // Left align
 
             // 🔥 CENTER AGAIN for thank you
             outputStream.write(new byte[]{0x1B, 0x61, 0x01});
